@@ -80,7 +80,7 @@ for link in links:
     time.sleep(1)
 
     # electrician page not existing anymore
-    if (driver.find_element_by_css_selector('div[class*="Header__NameBlock"] h1') is None):
+    if (len(driver.find_elements_by_css_selector('div[class*="Header__NameBlock"] h1')) == 0):
         continue
     
     # reveal shuffled contact numbers displayed as '...'
