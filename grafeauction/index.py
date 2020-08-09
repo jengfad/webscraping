@@ -43,9 +43,10 @@ siteFilters = [
 links = []
 lot_dict = {}
 
+ctr = 1
 for siteFilter in siteFilters:
+    print('ctr ' + str(ctr))
     driver.get(siteFilter)
-
     element_present = EC.presence_of_element_located((By.CSS_SELECTOR, 'div[class*="lot-card"]'))
     view_more_button = WebDriverWait(driver, 30).until(element_present)
 
@@ -57,14 +58,14 @@ for siteFilter in siteFilters:
         sale_order = lot_card.find_element_by_css_selector('span.lot-card__sale-order__value').text
 
         lot_dict[lot_number] = lot_item(title_name, url, "", lot_number, sale_order, "", "", "", "", "", "")
+        time.sleep(1)
 
-        # href = el.get_attribute('href')
-        # links.append(href)
-        # print(href)
-        break
+        if ctr == 5:
+            break
+        ctr = ctr + 1
 
-for lot_number in lot_dict:
-    lot_item = lot_dict[lot_number]
+for lot_key in lot_dict:
+    lot_item = lot_dict[lot_key]
     driver.get(lot_item.url)
     time.sleep(1)
     detail_el = driver.find_element_by_css_selector('div.lot-detail')
@@ -75,5 +76,36 @@ for lot_number in lot_dict:
     lot_item.online_premium = detail_el.find_element_by_css_selector('.event-rates-online .event-rates__amount').text
     lot_item.sales_tax = detail_el.find_element_by_css_selector('.event-rates-sales-tax .event-rates__amount').text
     lot_item.event_begins_ending = detail_el.find_element_by_css_selector('.event-date--start .event-date__date').text + ' ' + detail_el.find_element_by_css_selector('.event-date--start .event-date__time').text
+
+output_rows = []
+
+# build title row
+title_row = []
+first_item = lot_dict['1']
+for attr in dir(first_item):
+    if attr[:2] != '__':
+        title_row.append(attr)
+
+output_rows.append(title_row)
+
+for lot_key in lot_dict:
+    lot_row = []
+    lot_item = lot_dict[lot_key]
+
+    for attr in dir(lot_item):
+        if attr[:2] != '__':
+            lot_row.append(getattr(lot_item,attr))
+
+    output_rows.append(lot_row)
+
+# write to csv
+f = open('draft.csv', 'w')
+with f:
+    writer = csv.writer(f)
+    for row in output_rows:
+        writer.writerow(row)
+
+df = pd.read_csv('draft.csv')
+df.to_csv('output.csv', index=False)
 
 driver.quit()
