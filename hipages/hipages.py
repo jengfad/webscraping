@@ -10,6 +10,7 @@ from bs4 import BeautifulSoup
 import time
 import csv
 import numpy
+import pandas as pd
 
 class detail:  
     def __init__(self, business_name, location, post_code, contact_name, phone, mobile, fax):  
@@ -119,11 +120,14 @@ for detail in details:
     rows.append(row)
 
 # write to csv
-f = open('output.csv', 'w')
+f = open('draft.csv', 'w')
 with f:
     writer = csv.writer(f)
     for row in rows:
         writer.writerow(row)
+
+df = pd.read_csv('draft.csv')
+df.to_csv('output.csv', index=False)
 
 driver.quit()
 
