@@ -12,11 +12,14 @@ import csv
 import numpy
 import pandas as pd
 import json
+import shutil
+import requests
+import os
 
 class lot_item:  
     def __init__(self, title_name, url, customer_id, 
     lot_number, sale_order, high_bid, quantity, event_info, 
-    online_premium, sales_tax, event_begins_ending):  
+    online_premium, sales_tax, event_begins_ending, image_urls):  
         self.title_name = title_name  
         self.url = url
         self.customer_id = customer_id
@@ -28,6 +31,7 @@ class lot_item:
         self.online_premium = online_premium
         self.sales_tax = sales_tax
         self.event_begins_ending = event_begins_ending
+        self.image_urls = image_urls
 
 CHROME_DRIVER_PATH = "C://Repos//chromedriver_win32//chromedriver.exe"
 chromeOptions = Options()
@@ -37,7 +41,7 @@ driver = webdriver.Chrome(executable_path=CHROME_DRIVER_PATH, options=chromeOpti
 
 siteFilters = [
     'https://www.grafeauction.com/event/pier-1-distribution-center-groveport-day-1',
-    # 'https://www.grafeauction.com/event/pier-1-distribution-center-groveport-day-2'
+    'https://www.grafeauction.com/event/pier-1-distribution-center-groveport-day-2'
 ]
 
 links = []
@@ -56,10 +60,10 @@ for siteFilter in siteFilters:
         lot_number = lot_card.find_element_by_css_selector('span.lot-card__lot-number__value').text
         sale_order = lot_card.find_element_by_css_selector('span.lot-card__sale-order__value').text
 
-        lot_dict[lot_number] = lot_item(title_name, url, "", lot_number, sale_order, "", "", "", "", "", "")
+        lot_dict[lot_number] = lot_item(title_name, url, "", lot_number, sale_order, "", "", "", "", "", "", [])
         time.sleep(1)
 
-        # if ctr == 3:
+        # if ctr == 10:
         #     break
         # ctr = ctr + 1
 
@@ -75,6 +79,37 @@ for lot_key in lot_dict:
     lot_item.online_premium = detail_el.find_element_by_css_selector('.event-rates-online .event-rates__amount').text
     lot_item.sales_tax = detail_el.find_element_by_css_selector('.event-rates-sales-tax .event-rates__amount').text
     lot_item.event_begins_ending = detail_el.find_element_by_css_selector('.event-date--start .event-date__date').text + ' ' + detail_el.find_element_by_css_selector('.event-date--start .event-date__time').text
+    images = detail_el.find_elements_by_css_selector('.carousel-item img')
+
+    lot_item.image_urls = []
+    for img in images:
+        lot_item.image_urls.append(img.get_attribute('src'))
+
+def save_image_to_file(image, dirname, suffix):
+    with open('{dirname}/img_{suffix}.jpg'.format(dirname=dirname, suffix=suffix), 'wb') as out_file:
+        shutil.copyfileobj(image.raw, out_file)
+
+def download_images(dirname, links):
+    length = len(links)
+    for index, link in enumerate(links):
+        count = index + 1
+        print('Downloading image {} of {}'.format(count, length))
+        response = requests.get(link, stream=True)
+        save_image_to_file(response, dirname, count)
+        del response
+
+def create_directory(dir):
+    if not os.path.exists(dir):
+        os.makedirs(dir)
+
+dirname = os.path.dirname(__file__)
+images_dir = os.path.join(dirname, 'images')
+create_directory(images_dir)
+
+for lot_key in lot_dict:
+    lot_dir = images_dir + '/Lot ' + lot_key
+    create_directory(lot_dir)
+    download_images(lot_dir, lot_dict[lot_key].image_urls)
 
 output_rows = []
 
