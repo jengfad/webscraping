@@ -45,12 +45,11 @@ lot_dict = {}
 
 ctr = 1
 for siteFilter in siteFilters:
-    print('ctr ' + str(ctr))
     driver.get(siteFilter)
-    element_present = EC.presence_of_element_located((By.CSS_SELECTOR, 'div[class*="lot-card"]'))
+    element_present = EC.presence_of_element_located((By.CSS_SELECTOR, 'div.lot-card.fillbox'))
     view_more_button = WebDriverWait(driver, 30).until(element_present)
 
-    for lot_card in driver.find_elements_by_css_selector('div[class*="lot-card"]'):
+    for lot_card in driver.find_elements_by_css_selector('div.lot-card.fillbox'):
         url_el = lot_card.find_element_by_css_selector('h3 a')
         url = url_el.get_attribute('href')
         title_name = url_el.text
@@ -60,9 +59,9 @@ for siteFilter in siteFilters:
         lot_dict[lot_number] = lot_item(title_name, url, "", lot_number, sale_order, "", "", "", "", "", "")
         time.sleep(1)
 
-        if ctr == 5:
-            break
-        ctr = ctr + 1
+        # if ctr == 3:
+        #     break
+        # ctr = ctr + 1
 
 for lot_key in lot_dict:
     lot_item = lot_dict[lot_key]
@@ -70,7 +69,7 @@ for lot_key in lot_dict:
     time.sleep(1)
     detail_el = driver.find_element_by_css_selector('div.lot-detail')
     lot_item.high_bid = detail_el.find_element_by_css_selector('span.lot-detail__high-bid__value').text
-    lot_item.customer_id = detail_el.find_element_by_css_selector('span.lot-detail__high-bid__bidder').text
+    lot_item.customer_id = detail_el.find_element_by_css_selector('span.lot-detail__high-bid__bidder').text.replace("Customer ID ", "")
     lot_item.quantity = detail_el.find_element_by_xpath('//div[contains(text(), "Qty")]').find_element_by_css_selector('strong').text
     lot_item.event_info = detail_el.find_element_by_css_selector('span.event-type').text
     lot_item.online_premium = detail_el.find_element_by_css_selector('.event-rates-online .event-rates__amount').text
@@ -88,15 +87,16 @@ for attr in dir(first_item):
 
 output_rows.append(title_row)
 
+# build body rows
 for lot_key in lot_dict:
-    lot_row = []
-    lot_item = lot_dict[lot_key]
+    item_row = []
+    data = lot_dict[lot_key]
 
-    for attr in dir(lot_item):
+    for attr in dir(data):
         if attr[:2] != '__':
-            lot_row.append(getattr(lot_item,attr))
+            item_row.append(getattr(data,attr))
 
-    output_rows.append(lot_row)
+    output_rows.append(item_row)
 
 # write to csv
 f = open('draft.csv', 'w')
@@ -105,7 +105,9 @@ with f:
     for row in output_rows:
         writer.writerow(row)
 
+# clean up csv
 df = pd.read_csv('draft.csv')
 df.to_csv('output.csv', index=False)
 
+print('Finished...')
 driver.quit()

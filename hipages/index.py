@@ -75,6 +75,7 @@ def get_contact_number(soup, cssSelector):
     parent = x[0].parent
     return parent.select('a[class*="PhoneNumber"]')[0].text
 
+ctr = 1
 details = []
 for link in links:
     driver.get(link)
@@ -107,28 +108,40 @@ for link in links:
     # if (ctr == 3):
     #     break
 
-rows = [["Business Name", "Location", "Post Code", "Contact Name", "Phone", "Mobile", "Fax"]]
-for detail in details:
-    row = []
-    row.append(detail.business_name)
-    row.append(detail.location)
-    row.append(detail.post_code)
-    row.append(detail.contact_name)
-    row.append(detail.phone)
-    row.append(detail.mobile)
-    row.append(detail.fax)
-    rows.append(row)
+
+output_rows = []
+
+# build title row
+title_row = []
+first_item = details[0]
+for attr in dir(first_item):
+    if attr[:2] != '__':
+        title_row.append(attr)
+
+output_rows.append(title_row)
+
+# build body rows
+for data in details:
+    item_row = []
+
+    for attr in dir(data):
+        if attr[:2] != '__':
+            item_row.append(getattr(data,attr))
+
+    output_rows.append(item_row)
 
 # write to csv
 f = open('draft.csv', 'w')
 with f:
     writer = csv.writer(f)
-    for row in rows:
+    for row in output_rows:
         writer.writerow(row)
 
+# clean up csv
 df = pd.read_csv('draft.csv')
 df.to_csv('output.csv', index=False)
 
+print('Finished...')
 driver.quit()
 
 
