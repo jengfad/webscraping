@@ -8,6 +8,6 @@
 from itemadapter import ItemAdapter
 
 
-class GrafeauctionScraperPipeline:
+class GrafeauctionPipeline:
     def process_item(self, item, spider):
         return item

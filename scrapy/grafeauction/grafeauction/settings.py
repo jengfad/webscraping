@@ -1,4 +1,4 @@
-# Scrapy settings for grafeauction_scraper project
+# Scrapy settings for grafeauction project
 #
 # For simplicity, this file contains only settings considered important or
 # commonly used. You can find more settings consulting the documentation:
@@ -7,14 +7,14 @@
 #     https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 
-BOT_NAME = 'grafeauction_scraper'
+BOT_NAME = 'grafeauction'
 
-SPIDER_MODULES = ['grafeauction_scraper.spiders']
-NEWSPIDER_MODULE = 'grafeauction_scraper.spiders'
+SPIDER_MODULES = ['grafeauction.spiders']
+NEWSPIDER_MODULE = 'grafeauction.spiders'
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
-#USER_AGENT = 'grafeauction_scraper (+http://www.yourdomain.com)'
+#USER_AGENT = 'grafeauction (+http://www.yourdomain.com)'
 
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = True
@@ -45,14 +45,14 @@ ROBOTSTXT_OBEY = True
 # Enable or disable spider middlewares
 # See https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 #SPIDER_MIDDLEWARES = {
-#    'grafeauction_scraper.middlewares.GrafeauctionScraperSpiderMiddleware': 543,
+#    'grafeauction.middlewares.GrafeauctionSpiderMiddleware': 543,
 #}
 
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
-#DOWNLOADER_MIDDLEWARES = {
-#    'grafeauction_scraper.middlewares.GrafeauctionScraperDownloaderMiddleware': 543,
-#}
+DOWNLOADER_MIDDLEWARES = {
+   'grafeauction.middlewares.MainPageDownloaderMiddleWare': 100,
+}
 
 # Enable or disable extensions
 # See https://docs.scrapy.org/en/latest/topics/extensions.html
@@ -63,7 +63,7 @@ ROBOTSTXT_OBEY = True
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 #ITEM_PIPELINES = {
-#    'grafeauction_scraper.pipelines.GrafeauctionScraperPipeline': 300,
+#    'grafeauction.pipelines.GrafeauctionPipeline': 300,
 #}
 
 # Enable and configure the AutoThrottle extension (disabled by default)

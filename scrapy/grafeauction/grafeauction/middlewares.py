@@ -14,9 +14,10 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
+import scrapy
 
 
-class GrafeauctionScraperSpiderMiddleware:
+class GrafeauctionSpiderMiddleware:
     # Not all methods need to be defined. If a method is not defined,
     # scrapy acts as if the spider middleware does not modify the
     # passed objects.
@@ -63,7 +64,7 @@ class GrafeauctionScraperSpiderMiddleware:
         spider.logger.info('Spider opened: %s' % spider.name)
 
 
-class GrafeauctionScraperDownloaderMiddleware:
+class GrafeauctionDownloaderMiddleware:
     # Not all methods need to be defined. If a method is not defined,
     # scrapy acts as if the downloader middleware does not modify the
     # passed objects.
@@ -109,9 +110,13 @@ class GrafeauctionScraperDownloaderMiddleware:
     def spider_opened(self, spider):
         spider.logger.info('Spider opened: %s' % spider.name)
 
-class CustomDownloaderMiddleWare:
+class MainPageDownloaderMiddleWare:
 
     def process_request(self, request, spider):
+
+        if request.url != 'https://www.grafeauction.com/event/pier-1-distribution-center-groveport-day-1':
+            return None
+  
         url = request.url
 
         CHROME_DRIVER_PATH = "C://Repos//chromedriver_win32//chromedriver.exe"
@@ -121,6 +126,10 @@ class CustomDownloaderMiddleWare:
         driver = webdriver.Chrome(executable_path=CHROME_DRIVER_PATH, options=chromeOptions)
         driver.get(url)
 
-        lot_card = WebDriverWait(driver, 60).until(
+        WebDriverWait(driver, 60).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, 'div.lot-card.fillbox'))
         )
+
+        body = driver.page_source
+        driver.quit()
+        return scrapy.http.HtmlResponse(url=url, status=200, body=body, encoding='utf-8')
