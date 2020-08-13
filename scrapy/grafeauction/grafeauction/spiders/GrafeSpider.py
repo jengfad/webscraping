@@ -7,7 +7,7 @@ class GrafespiderSpider(scrapy.Spider):
     start_urls = [fn + '/event/pier-1-distribution-center-groveport-day-1']
 
     def parse(self, response):
-        for lot_card in response.xpath('//div[contains(@class, "lot-card fillbox")]')[:1]:
+        for lot_card in response.xpath('//div[contains(@class, "lot-card fillbox")]')[:3]:
             url = lot_card.xpath('.//h3[@class = "lot-card__title"]//a/@href').extract_first()
             formatted_url = self.fn + url
             auction_item = AuctionItem()
