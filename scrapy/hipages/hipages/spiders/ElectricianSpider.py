@@ -1,16 +1,21 @@
 import scrapy
 from hipages.items import ElectricianItem
 from scrapy.loader import ItemLoader
+import hipages.constants as constants
 
 class ElectricianspiderSpider(scrapy.Spider):
     name = 'ElectricianSpider'
     fn = 'https://hipages.com.au'
-    start_urls = [fn + '/find/electricians/nsw/sydney']
+    start_urls = constants.START_URLS
+
+    def start_requests(self):
+        for url in constants.START_URLS:
+            yield scrapy.Request(url, self.parse)
 
     def parse(self, response):
         for index, card in enumerate(response.xpath('//div[contains(@class, "business-listing-header__BusinessListingHeaderColumn")]')): 
             
-            if (index > 5):
+            if (index > 1):
                 break
             
             url = self.fn + card.xpath('.//a/@href').extract_first()

@@ -17,6 +17,8 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 import time
 
+import hipages.constants as constants
+
 CHROME_DRIVER_PATH = "C://Repos//chromedriver_win32//chromedriver.exe"
 chromeOptions = Options()
 chromeOptions.add_argument("--kiosk")
@@ -118,7 +120,7 @@ class MainPageDownloaderMiddleware:
 
     def process_request(self, request, spider):
 
-        if (request.url != 'https://hipages.com.au/find/electricians/nsw/sydney'):
+        if (request.url not in constants.START_URLS):
             return None
 
         url = request.url
