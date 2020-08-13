@@ -3,10 +3,16 @@
 # See documentation in:
 # https://docs.scrapy.org/en/latest/topics/items.html
 
-import scrapy
+from scrapy import Field, Item
+from scrapy.loader.processors import TakeFirst, MapCompose
 
 
-class HipagesItem(scrapy.Item):
-    # define the fields for your item here like:
-    # name = scrapy.Field()
-    pass
+class ElectricianItem(Item):
+    business_name = Field(output_processor=TakeFirst()) 
+    location = Field(output_processor=TakeFirst()) 
+    post_code = Field(output_processor=TakeFirst()) 
+    contact_name = Field(output_processor=TakeFirst()) 
+    phone = Field(output_processor=TakeFirst()) 
+    mobile = Field(output_processor=TakeFirst()) 
+    fax = Field(output_processor=TakeFirst()) 
+    url = Field(output_processor=TakeFirst()) 

@@ -3,11 +3,23 @@
 # See documentation in:
 # https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 
-from scrapy import signals
+from scrapy import signals, http
 
 # useful for handling different item types with a single interface
 from itemadapter import is_item, ItemAdapter
 
+
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
+import time
+
+CHROME_DRIVER_PATH = "C://Repos//chromedriver_win32//chromedriver.exe"
+chromeOptions = Options()
+chromeOptions.add_argument("--kiosk")
 
 class HipagesSpiderMiddleware:
     # Not all methods need to be defined. If a method is not defined,
@@ -101,3 +113,65 @@ class HipagesDownloaderMiddleware:
 
     def spider_opened(self, spider):
         spider.logger.info('Spider opened: %s' % spider.name)
+
+class MainPageDownloaderMiddleware:
+
+    def process_request(self, request, spider):
+
+        if (request.url != 'https://hipages.com.au/find/electricians/nsw/sydney'):
+            return None
+
+        url = request.url
+
+        driver = webdriver.Chrome(executable_path=CHROME_DRIVER_PATH, options=chromeOptions)
+        driver.get(url)
+
+        # load all electrician until there is no 'View More' functionality
+        ctr = 1
+        while True:
+            try:
+                element_present = EC.presence_of_element_located((By.CSS_SELECTOR, 'a[class*="view-more-sites__ViewMoreLink"]'))
+                view_more_button = WebDriverWait(driver, 60).until(element_present)
+                view_more_button.click()
+
+                if (ctr == 3):
+                    break
+                ctr = ctr + 1
+
+            except NoSuchElementException:
+                break
+            except TimeoutException:
+                break
+
+        body = driver.page_source
+        driver.quit()
+        return http.HtmlResponse(url=url, status=200, body=body, encoding='utf-8')
+
+class ElectricianPageDownloaderMiddleware:
+    
+    def process_request(self, request, spider):
+
+        if request.url.find('/connect/') == -1:
+            return None
+
+        url = request.url
+
+        driver = webdriver.Chrome(executable_path=CHROME_DRIVER_PATH, options=chromeOptions)
+        driver.get(url)
+
+        try:
+            WebDriverWait(driver, 5).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, 'div[class*="Header__NameBlock"] h1'))
+            )
+        except:
+            return None
+        
+        shuffled_numbers = driver.find_elements_by_css_selector('span[class*="ShuffledPhoneNumber"]')
+        for number in shuffled_numbers:
+            number.click()
+
+        time.sleep(0.5)
+
+        body = driver.page_source
+        driver.quit()
+        return http.HtmlResponse(url=url, status=200, body=body, encoding='utf-8')

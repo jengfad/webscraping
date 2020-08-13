@@ -50,9 +50,11 @@ ROBOTSTXT_OBEY = True
 
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
-#DOWNLOADER_MIDDLEWARES = {
+DOWNLOADER_MIDDLEWARES = {
 #    'hipages.middlewares.HipagesDownloaderMiddleware': 543,
-#}
+    'hipages.middlewares.MainPageDownloaderMiddleware': 100,
+    'hipages.middlewares.ElectricianPageDownloaderMiddleware': 200,
+}
 
 # Enable or disable extensions
 # See https://docs.scrapy.org/en/latest/topics/extensions.html
