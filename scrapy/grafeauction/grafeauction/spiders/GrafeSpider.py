@@ -1,5 +1,6 @@
 import scrapy
 from grafeauction.items import AuctionItem
+from scrapy.loader import ItemLoader
 
 class GrafespiderSpider(scrapy.Spider):
     name = 'GrafeSpider'
@@ -7,26 +8,33 @@ class GrafespiderSpider(scrapy.Spider):
     start_urls = [fn + '/event/pier-1-distribution-center-groveport-day-1']
 
     def parse(self, response):
-        for lot_card in response.xpath('//div[contains(@class, "lot-card fillbox")]')[:3]:
+        for lot_card in response.xpath('//div[contains(@class, "lot-card fillbox")]')[:50]:
             url = lot_card.xpath('.//h3[@class = "lot-card__title"]//a/@href').extract_first()
             formatted_url = self.fn + url
+
             auction_item = AuctionItem()
-            auction_item['url'] = formatted_url
-            auction_item['sale_order'] = lot_card.xpath('.//span[contains(@class, "lot-card__sale-order__value")]/text()').extract_first()
+            auction_item_loader = ItemLoader(item=auction_item, selector=lot_card)
+            auction_item_loader.add_value('url', formatted_url)
+            auction_item_loader.add_xpath('title_name', './/h3[@class = "lot-card__title"]//a/text()')
+            auction_item_loader.add_xpath('customer_id', './/span[@class = "lot-card__high-bid__bidder"]/text()')
+            auction_item_loader.add_xpath('sale_order', './/span[contains(@class, "lot-card__sale-order__value")]/text()')
+            auction_item_loader.load_item()
+
             yield scrapy.Request(formatted_url, callback=self.parse_lotpage, meta={'auction_item': auction_item})
     
     def parse_lotpage(self, response):
+        detail = response.xpath('//div[@class="lot-detail"]')[0]
         auction_item = response.meta.get('auction_item')
-        auction_item['title_name'] = response.xpath('//h1[contains(@class, "lot-detail__title")]/text()').extract_first()
-        auction_item['lot_number'] = response.xpath('//div[contains(text(), "Lot")]//strong/text()').extract_first()
-        auction_item['quantity'] = response.xpath('//div[contains(text(), "Qty")]//strong/text()').extract_first()
-        auction_item['high_bid'] = response.xpath('//span[contains(@class, "lot-detail__high-bid__value")]/text()').extract_first()
-        auction_item['customer_id'] = response.xpath('//span[contains(@class, "lot-detail__high-bid__bidder")]/text()').extract_first()
-        auction_item['event_info'] = response.xpath('//span[contains(@class, "event-type")]/text()').extract_first()
-        auction_item['online_premium'] = response.xpath('//span[contains(@class, "event-rates-online")]/span[contains(@class, "event-rates__amount")]/text()').extract_first()
-        auction_item['sales_tax'] = response.xpath('//span[contains(@class, "event-rates-sales-tax")]/span[contains(@class, "event-rates__amount")]/text()').extract_first()
-        auction_item['image_urls'] = response.xpath('//div[@class = "carousel-item"]//img/@src').extract()
-        yield auction_item
+        auction_item_loader = ItemLoader(item=auction_item, selector=detail)
+
+        auction_item_loader.add_xpath('lot_number', './/div[contains(text(), "Lot")]//strong/text()')
+        auction_item_loader.add_xpath('quantity', './/div[contains(text(), "Qty")]//strong/text()')
+        auction_item_loader.add_xpath('high_bid', './/span[contains(@class, "lot-detail__high-bid__value")]/text()')
+        auction_item_loader.add_xpath('event_info', './/span[contains(@class, "event-type")]/text()')
+        auction_item_loader.add_xpath('online_premium', './/span[contains(@class, "event-rates-online")]/span[contains(@class, "event-rates__amount")]/text()')
+        auction_item_loader.add_xpath('sales_tax', './/span[contains(@class, "event-rates-sales-tax")]/span[contains(@class, "event-rates__amount")]/text()')
+        auction_item_loader.add_xpath('image_urls', '///div[@class = "carousel-item"]//img/@src')
+        yield auction_item_loader.load_item()
 
 
 
