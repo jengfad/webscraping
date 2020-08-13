@@ -25,6 +25,7 @@ class GrafespiderSpider(scrapy.Spider):
         auction_item['event_info'] = response.xpath('//span[contains(@class, "event-type")]/text()').extract_first()
         auction_item['online_premium'] = response.xpath('//span[contains(@class, "event-rates-online")]/span[contains(@class, "event-rates__amount")]/text()').extract_first()
         auction_item['sales_tax'] = response.xpath('//span[contains(@class, "event-rates-sales-tax")]/span[contains(@class, "event-rates__amount")]/text()').extract_first()
+        auction_item['image_urls'] = response.xpath('//div[@class = "carousel-item"]//img/@src').extract()
         yield auction_item
 
 
