@@ -52,6 +52,7 @@ ROBOTSTXT_OBEY = True
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 DOWNLOADER_MIDDLEWARES = {
    'grafeauction.middlewares.MainPageDownloaderMiddleWare': 100,
+   'grafeauction.middlewares.LotPageDownloaderMiddleware': 200,
 }
 
 # Enable or disable extensions

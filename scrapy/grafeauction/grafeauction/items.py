@@ -6,7 +6,7 @@
 import scrapy
 
 
-class GrafeauctionItem(scrapy.Item):
+class AuctionItem(scrapy.Item):
     title_name = scrapy.Field()  
     url = scrapy.Field()
     customer_id = scrapy.Field()

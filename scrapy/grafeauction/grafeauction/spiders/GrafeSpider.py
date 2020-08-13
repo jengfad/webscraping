@@ -1,25 +1,34 @@
 import scrapy
-
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import NoSuchElementException, TimeoutException
+from grafeauction.items import AuctionItem
 
 class GrafespiderSpider(scrapy.Spider):
     name = 'GrafeSpider'
-    allowed_domains = ['grafeauction.com']
-    start_urls = ['https://www.grafeauction.com/event/pier-1-distribution-center-groveport-day-1']
+    fn = 'https://www.grafeauction.com'
+    start_urls = [fn + '/event/pier-1-distribution-center-groveport-day-1']
 
     def parse(self, response):
-        print('WOOT HERE')
+        for lot_card in response.xpath('//div[contains(@class, "lot-card fillbox")]')[:1]:
+            url = lot_card.xpath('.//h3[@class = "lot-card__title"]//a/@href').extract_first()
+            formatted_url = self.fn + url
+            auction_item = AuctionItem()
+            auction_item['url'] = formatted_url
+            auction_item['sale_order'] = lot_card.xpath('.//span[contains(@class, "lot-card__sale-order__value")]/text()').extract_first()
+            yield scrapy.Request(formatted_url, callback=self.parse_lotpage, meta={'auction_item': auction_item})
+    
+    def parse_lotpage(self, response):
+        auction_item = response.meta.get('auction_item')
+        auction_item['title_name'] = response.xpath('//h1[contains(@class, "lot-detail__title")]/text()').extract_first()
+        auction_item['lot_number'] = response.xpath('//div[contains(text(), "Lot")]//strong/text()').extract_first()
+        auction_item['quantity'] = response.xpath('//div[contains(text(), "Qty")]//strong/text()').extract_first()
+        auction_item['high_bid'] = response.xpath('//span[contains(@class, "lot-detail__high-bid__value")]/text()').extract_first()
+        auction_item['customer_id'] = response.xpath('//span[contains(@class, "lot-detail__high-bid__bidder")]/text()').extract_first()
+        auction_item['event_info'] = response.xpath('//span[contains(@class, "event-type")]/text()').extract_first()
+        auction_item['online_premium'] = response.xpath('//span[contains(@class, "event-rates-online")]/span[contains(@class, "event-rates__amount")]/text()').extract_first()
+        auction_item['sales_tax'] = response.xpath('//span[contains(@class, "event-rates-sales-tax")]/span[contains(@class, "event-rates__amount")]/text()').extract_first()
+        yield auction_item
 
-        yield {
-            'lot_number': response.xpath('//span[contains(@class, "lot-card__lot-number__value")]/text()').extract_first(),
-            'sale_order': response.xpath('//span[contains(@class, "lot-card__sale-order__value")]/text()').extract_first(),
-            'url': response.xpath('//h3//a/@href').extract_first()
-        }
+
+
 
 
         

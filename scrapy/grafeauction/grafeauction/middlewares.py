@@ -16,6 +16,9 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 import scrapy
 
+CHROME_DRIVER_PATH = "C://Repos//chromedriver_win32//chromedriver.exe"
+chromeOptions = Options()
+chromeOptions.add_argument("--kiosk")
 
 class GrafeauctionSpiderMiddleware:
     # Not all methods need to be defined. If a method is not defined,
@@ -119,10 +122,6 @@ class MainPageDownloaderMiddleWare:
   
         url = request.url
 
-        CHROME_DRIVER_PATH = "C://Repos//chromedriver_win32//chromedriver.exe"
-        chromeOptions = Options()
-        chromeOptions.add_argument("--kiosk")
-
         driver = webdriver.Chrome(executable_path=CHROME_DRIVER_PATH, options=chromeOptions)
         driver.get(url)
 
@@ -130,6 +129,25 @@ class MainPageDownloaderMiddleWare:
             EC.presence_of_element_located((By.CSS_SELECTOR, 'div.lot-card.fillbox'))
         )
 
+        body = driver.page_source
+        driver.quit()
+        return scrapy.http.HtmlResponse(url=url, status=200, body=body, encoding='utf-8')
+
+class LotPageDownloaderMiddleware:
+
+    def process_request(self, request, spider):
+
+        if request.url.find('/lot/') == -1:
+            return None
+  
+        url = request.url
+
+        driver = webdriver.Chrome(executable_path=CHROME_DRIVER_PATH, options=chromeOptions)
+        driver.get(url)
+
+        WebDriverWait(driver, 60).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, '.lot-detail__title'))
+        )
         body = driver.page_source
         driver.quit()
         return scrapy.http.HtmlResponse(url=url, status=200, body=body, encoding='utf-8')
