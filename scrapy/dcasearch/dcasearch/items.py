@@ -7,8 +7,14 @@ from scrapy import Item, Field
 from scrapy.loader.processors import TakeFirst, MapCompose
 
 class SearchItem(Item):
-    name = Field(output_processor=TakeFirst())
-    licenseNumber = Field(output_processor=TakeFirst())
-    licenseType = Field(output_processor=TakeFirst()) 
-    licenseStatus = Field(output_processor=TakeFirst()) 
-    address = Field(output_processor=TakeFirst())
+    main_name = Field(output_processor=TakeFirst())
+    main_license_number = Field(output_processor=TakeFirst())
+    main_license_type = Field(output_processor=TakeFirst()) 
+    main_license_status = Field(output_processor=TakeFirst()) 
+    main_address = Field(output_processor=TakeFirst())
+
+    relation_name = Field(output_processor=TakeFirst())
+    relation_license_number = Field(output_processor=TakeFirst())
+    relation_license_type = Field(output_processor=TakeFirst())
+    relation_license_status = Field(output_processor=TakeFirst())
+    relation_address = Field(output_processor=TakeFirst())

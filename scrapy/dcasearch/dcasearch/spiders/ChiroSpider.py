@@ -23,24 +23,32 @@ class ChirospiderSpider(scrapy.Spider):
     start_urls = [mainPageSearchUrl]
 
     def parse(self, response):
-        nums = [1]
+        nums = [20]
         for num in nums:
             licenseNumber = str(num)
             response = self.mainPageSearch(licenseNumber)
             yield self.getDetails(response, licenseNumber)
 
     def getDetails(self, response, licenseNumber):
-        searchItem = SearchItem()
-        searchItemLoader = ItemLoader(item=searchItem, selector=response)
+        search_item = SearchItem()
+        search_item_loader = ItemLoader(item=search_item, selector=response)
         Logger.log('Begin loading item')
-        searchItemLoader.add_xpath('name', './/div[@class="detailContainer"]//p[@id="name"]/text()')
-        searchItemLoader.add_value('licenseNumber', licenseNumber)
-        searchItemLoader.add_xpath('licenseType', './/div[@class="detailContainer"]//p[@id="licType"]/text()')
-        searchItemLoader.add_xpath('licenseStatus', './/div[@class="detailContainer"]//p[@id="primaryStatus"]/text()')
-        searchItemLoader.add_xpath('address', './/div[@id="address"]//p[2]/text()')
-        searchItemLoader.load_item()
+
+        search_item_loader.add_xpath('main_name', './/header//div[@class="detailContainer"]//p[@id="name"]/text()')
+        search_item_loader.add_value('main_license_number', licenseNumber)
+        search_item_loader.add_xpath('main_license_type', './/header//div[@class="detailContainer"]//p[@id="licType"]/text()')
+        search_item_loader.add_xpath('main_license_status', './/header//div[@class="detailContainer"]//p[@id="primaryStatus"]/text()')
+        search_item_loader.add_xpath('main_address', './/header//div[@id="address"]//p[2]/text()')
+        
+        search_item_loader.add_xpath('relation_name', './/div[@class="relDetailPad"]//span[@class="relDetailHeader" and contains(text(), "Name")]/parent::p/text()')
+        search_item_loader.add_xpath('relation_license_number', './/div[@class="relDetailPad"]//a[@class="newTab"]/text()')
+        search_item_loader.add_xpath('relation_license_status', '//div[@class="relDetailPad"]//span[@class="relDetailHeader" and contains(text(), "Status")]/following-sibling::text()')
+        search_item_loader.add_xpath('relation_license_type', './/div[@class="relDetailPad"]//span[@class="relDetailHeader" and contains(text(), "Type")]/parent::p/text()')
+        search_item_loader.add_xpath('relation_address', './/div[@class="relDetailPad" and @id="address"]//p[1]/text()')
+
+        search_item_loader.load_item()
         Logger.log('Finished loading item')
-        return searchItem
+        return search_item
 
     def mainPageSearch(self, licenseNumber):
 
