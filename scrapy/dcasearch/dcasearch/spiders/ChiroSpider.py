@@ -22,12 +22,36 @@ class ChirospiderSpider(scrapy.Spider):
     mainPageSearchUrl = 'http://search.dca.ca.gov/'
     start_urls = [mainPageSearchUrl]
 
+    hard_stop = 2
+    last_valid_license_number = ""
+
     def parse(self, response):
-        nums = [20]
+        nums = [20, 5000, 5001, 5002, 5003]
+        invalid_ctr = 0
         for num in nums:
-            licenseNumber = str(num)
-            response = self.mainPageSearch(licenseNumber)
-            yield self.getDetails(response, licenseNumber)
+        # for num, x in enumerate(range(2), 1):
+            license_number = str(num)
+            response = self.mainPageSearch(license_number)
+            details = self.getDetails(response, license_number)
+
+            if not details.get("main_name"):
+                invalid_ctr = invalid_ctr + 1
+            else:
+                invalid_ctr = 0
+                self.last_valid_license_number = license_number
+
+            if (invalid_ctr > self.hard_stop):
+                Logger.log('Hardstop on License %s' %(license_number))
+                self.write_last_valid_license()
+                break
+
+            yield details
+
+    def write_last_valid_license(self):
+        path = 'output/ChiroCorporation/Last Number.txt'
+        with open(path, 'w') as out_file:
+             out_file.write(self.last_valid_license_number)
+            
 
     def getDetails(self, response, licenseNumber):
         search_item = SearchItem()

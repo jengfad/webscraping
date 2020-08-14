@@ -16,7 +16,11 @@ class CustomSearchItemPipeline:
         return item
 
     def write_item_to_file(self, item):
-        path = 'output/ChiroCorporation%s.csv' %(item.get('main_license_number'))
+        main_name = item.get('main_name')
+        no_result_text=""
+        if not main_name:
+            no_result_text="-NoResult"
+        path = 'output/ChiroCorporation/ChiroCorporation%s%s.csv' %(item.get('main_license_number'), no_result_text)
         self.file = open(path, 'w+b')
         self.exporter = CustomCsvItemExporter(self.file)
         self.exporter.start_exporting()
