@@ -40,12 +40,18 @@ DEPARTMENT_DICT = {
 }
 
 class EmailContact:  
-    def __init__(self, index, school_name, school_url, email_1, email_2): 
+    def __init__(self, index, school_name, school_url, department_link, email_1, email_2): 
         self.index = index
         self.school_name = school_name
         self.school_url = school_url
+        self.department_link = department_link
         self.email_1 = email_1
         self.email_2 = email_2
+
+class EmailsAndLink:
+     def __init__(self, emails, link):
+        self.emails = emails
+        self.link = link
 
 def extract_domain(url):
     if "http" in str(url) or "www" in str(url):
@@ -91,25 +97,26 @@ def get_emails(school_name, search_items):
 
         emails = extract_email_from_page(link)
         if (len(emails) > 0):
-            return emails
+            return EmailsAndLink(emails, link)
     
     # fallback
     # print('no email extracted')
-    return []
+    return EmailsAndLink([], '')
 
 ###########Main Function
 
 def get_empty_email_contact(index, school_name, school_url):
-    return EmailContact(index, school_name, school_url, '', '')
+    return EmailContact(index, school_name, school_url, '', '', '')
 
-def get_email_result(index, school_name, school_url, emails):
-    if (len(emails) == 0):
+def get_email_result(index, school_name, school_url, emails_and_link):
+    item = emails_and_link
+    if (len(item.emails) == 0):
         return get_empty_email_contact(index, school_name, school_url)
 
-    if (len(emails) > 1):
-        return EmailContact(index, school_name, school_url, emails[0], emails[1])
+    if (len(item.emails) > 1):
+        return EmailContact(index, school_name, school_url, item.link, item.emails[0], item.emails[1])
     else:
-        return EmailContact(index, school_name, school_url, emails[0], '')
+        return EmailContact(index, school_name, school_url, item.link, item.emails[0], '')
 
 def write_to_csv(filepath, details):
     output_rows = []
@@ -154,7 +161,7 @@ def scrape_by_department(department_name):
 
             if index <= 2:
                 continue
-            if index == 12:
+            if index == 23:
                 break
             
             school_name = row[0]
@@ -170,20 +177,16 @@ def scrape_by_department(department_name):
     write_to_csv(f'output/{department_name}.csv', email_results)
 
 try:
-    driver = webdriver.Chrome(executable_path=CHROME_DRIVER_PATH, options=chromeOptions)
 
+    start_time = time.time()
+    driver = webdriver.Chrome(executable_path=CHROME_DRIVER_PATH, options=chromeOptions)
     for department_name in DEPARTMENT_DICT:
-        # if (department_name != 'history'):
-        #     continue
+        if (department_name != 'scholarship'):
+            continue
         scrape_by_department(department_name)
 
-    # emails = extract_email_from_page("http://www.sunyrockland.edu/study-at-rcc/academics-and-degrees/academic-departments/history")
-
-    # for email in emails:
-    #     print(email)
-
-    
-
+    elapsed_time = time.time() - start_time
+    print(f'TIME ELAPSED: {elapsed_time}')
 
 finally:
     print('done')
