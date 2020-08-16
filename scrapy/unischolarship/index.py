@@ -29,7 +29,9 @@ DEPARTMENT_DICT = {
         'history department'
     ],
     "creative_writing": [
-        'creative writing'
+        'creative writing',
+        'arts deparment',
+        'english deparment'
     ],
     "theater": [
         'theater department',
