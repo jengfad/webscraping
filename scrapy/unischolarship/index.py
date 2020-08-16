@@ -11,6 +11,7 @@ import csv
 import tldextract
 from bs4 import BeautifulSoup
 import re
+import pandas as pd
 
 
 CHROME_DRIVER_PATH = "C://Repos//chromedriver_win32//chromedriver.exe"
@@ -19,23 +20,22 @@ chromeOptions.add_argument("--kiosk")
 EMAIL_REGEX = "([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)"
 GOOGLE_URL = "https://www.google.com/"
 
-SCHOLARSHIP_SEARCH = [
-    'scholarship',
-    'career'
-]
-
-HISTORY_SEARCH = [
-    'history department'
-]
-
-CREATIVE_WRITING_SEARCH = [
-    'creative writing'
-]
-
-THEATER_SEARCH = [
-    'theater department',
-    'film department'
-]
+DEPARTMENT_DICT = {
+    "scholarship": [
+        'scholarship',
+        'career'
+    ],
+    "history": [
+        'history department'
+    ],
+    "creative_writing": [
+        'creative writing'
+    ],
+    "theater": [
+        'theater department',
+        'film department'
+    ]
+}
 
 class EmailContact:  
     def __init__(self, index, school_name, school_url, email_1, email_2): 
@@ -54,7 +54,6 @@ def extract_domain(url):
 
 
 def extract_email_from_page(url):
-    print('navigating to search result')
     driver.get(url)
 
     WebDriverWait(driver, 5).until(
@@ -68,17 +67,20 @@ def extract_email_from_page(url):
         x = re.findall(EMAIL_REGEX, email)
         results.append(x[0])
 
+    # for email in re.findall(EMAIL_REGEX, driver.page_source):
+    #     results.append(email)
+
     return results
 
-def get_emails(school_name):  
-    for search_item in HISTORY_SEARCH:
+def get_emails(school_name, search_items):  
+    for search_item in search_items:
         driver.get(GOOGLE_URL)
 
         WebDriverWait(driver, 5).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, 'input'))
         )
 
-        search_text = f'{search_item} {school_name}'
+        search_text = f'{school_name} {search_item}'
         search_input_el = driver.find_element_by_xpath("//input[@title='Search']")
         search_input_el.send_keys(search_text)
         search_input_el.send_keys(Keys.RETURN)
@@ -107,17 +109,40 @@ def get_email_result(index, school_name, school_url, emails):
     else:
         return EmailContact(index, school_name, school_url, emails[0], '')
 
+def write_to_csv(filepath, details):
+    output_rows = []
 
-try:
-    driver = webdriver.Chrome(executable_path=CHROME_DRIVER_PATH, options=chromeOptions)
+    # build title row
+    title_row = []
+    first_item = details[0]
+    for attr in dir(first_item):
+        if attr[:2] != '__':
+            title_row.append(attr)
 
-        
-    # emails = extract_email_from_page("http://www.sunyrockland.edu/study-at-rcc/academics-and-degrees/academic-departments/history")
+    output_rows.append(title_row)
 
-    # for email in emails:
-    #     print(email)
+    # build body rows
+    for data in details:
+        item_row = []
 
-    
+        for attr in dir(data):
+            if attr[:2] != '__':
+                item_row.append(getattr(data,attr))
+
+        output_rows.append(item_row)
+
+    # write to csv
+    f = open('draft.csv', 'w')
+    with f:
+        writer = csv.writer(f)
+        for row in output_rows:
+            writer.writerow(row)
+
+    # clean up csv
+    df = pd.read_csv('draft.csv')
+    df.to_csv(filepath, index=False)
+
+def scrape_by_department(department_name):
     email_results = []
     with open('source_files/Colleges_and_Universities.csv', 'r') as in_file:
         csv_reader = csv.reader(in_file, delimiter=',')
@@ -127,23 +152,36 @@ try:
 
             if index <= 2:
                 continue
-            if index == 5:
+            if index == 12:
                 break
             
             school_name = row[0]
             url = row[6]
-            domain = extract_domain(url)
 
-            if (domain == 'NA'):
-                email_results.append(get_empty_email_contact(index, school_name, url))
-                continue
-
-            extracted_emails = get_emails(school_name)
+            extracted_emails = get_emails(school_name, DEPARTMENT_DICT[department_name])
             email_contact = get_email_result(index, school_name, url, extracted_emails)
             email_results.append(email_contact)
 
     for res in email_results:
         print(f'index: {res.index}, name: {res.school_name}, url: {res.school_url}, email_1: {res.email_1}, email_2: {res.email_2}')
+
+    write_to_csv(f'output/{department_name}.csv', email_results)
+
+try:
+    driver = webdriver.Chrome(executable_path=CHROME_DRIVER_PATH, options=chromeOptions)
+
+    for department_name in DEPARTMENT_DICT:
+        # if (department_name != 'history'):
+        #     continue
+        scrape_by_department(department_name)
+
+    # emails = extract_email_from_page("http://www.sunyrockland.edu/study-at-rcc/academics-and-degrees/academic-departments/history")
+
+    # for email in emails:
+    #     print(email)
+
+    
+
 
 finally:
     print('done')
