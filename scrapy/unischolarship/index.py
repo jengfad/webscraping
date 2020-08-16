@@ -16,7 +16,7 @@ import re
 CHROME_DRIVER_PATH = "C://Repos//chromedriver_win32//chromedriver.exe"
 chromeOptions = Options()
 chromeOptions.add_argument("--kiosk")
-EMAIL_REGEX = r"""(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])"""
+EMAIL_REGEX = "([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)"
 GOOGLE_URL = "https://www.google.com/"
 
 SCHOLARSHIP_SEARCH = [
@@ -37,6 +37,14 @@ THEATER_SEARCH = [
     'film department'
 ]
 
+class EmailContact:  
+    def __init__(self, index, school_name, school_url, email_1, email_2): 
+        self.index = index
+        self.school_name = school_name
+        self.school_url = school_url
+        self.email_1 = email_1
+        self.email_2 = email_2
+
 def extract_domain(url):
     if "http" in str(url) or "www" in str(url):
         parsed = tldextract.extract(url)
@@ -48,52 +56,96 @@ def extract_domain(url):
 def extract_email_from_page(url):
     print('navigating to search result')
     driver.get(url)
+
+    WebDriverWait(driver, 5).until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, 'html'))
+    )
+    
     soup = BeautifulSoup(driver.page_source, "lxml")
 
     results = []
-    for index, email in enumerate(soup.find_all(text=re.compile(EMAIL_REGEX))):
-        results.append(email)
+    for email in soup.find_all(text=re.compile(EMAIL_REGEX)):
+        x = re.findall(EMAIL_REGEX, email)
+        results.append(x[0])
 
     return results
 
-def get_emails(school_url):  
+def get_emails(school_name):  
     for search_item in HISTORY_SEARCH:
         driver.get(GOOGLE_URL)
-        time.sleep(1)
 
-        search_text = f'{school_url} {search_item}'
+        WebDriverWait(driver, 5).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, 'input'))
+        )
+
+        search_text = f'{search_item} {school_name}'
         search_input_el = driver.find_element_by_xpath("//input[@title='Search']")
         search_input_el.send_keys(search_text)
         search_input_el.send_keys(Keys.RETURN)
-        time.sleep(1)
 
         link = driver.find_element_by_xpath('//div[@class="g"]//a').get_attribute('href')
 
         emails = extract_email_from_page(link)
         if (len(emails) > 0):
             return emails
-            break
     
+    # fallback
+    # print('no email extracted')
+    return []
+
 ###########Main Function
+
+def get_empty_email_contact(index, school_name, school_url):
+    return EmailContact(index, school_name, school_url, '', '')
+
+def get_email_result(index, school_name, school_url, emails):
+    if (len(emails) == 0):
+        return get_empty_email_contact(index, school_name, school_url)
+
+    if (len(emails) > 1):
+        return EmailContact(index, school_name, school_url, emails[0], emails[1])
+    else:
+        return EmailContact(index, school_name, school_url, emails[0], '')
 
 
 try:
     driver = webdriver.Chrome(executable_path=CHROME_DRIVER_PATH, options=chromeOptions)
 
-    with open('source_files/Colleges_and_Universities.csv') as csv_file:
-        csv_reader = csv.reader(csv_file, delimiter=',')
-        for index, row in enumerate(csv_reader):
-            if index <= 3:
+        
+    # emails = extract_email_from_page("http://www.sunyrockland.edu/study-at-rcc/academics-and-degrees/academic-departments/history")
+
+    # for email in emails:
+    #     print(email)
+
+    
+    email_results = []
+    with open('source_files/Colleges_and_Universities.csv', 'r') as in_file:
+        csv_reader = csv.reader(in_file, delimiter=',')
+        for index, row in enumerate(csv_reader, 1):
+
+            print(f'index is {index}')
+
+            if index <= 2:
                 continue
             if index == 5:
                 break
             
+            school_name = row[0]
             url = row[6]
-            domain = extract_domain(row[6])
-            print(f'URL: {domain}')
-            print(f'index is {index}')
-            emails = get_emails(domain)
+            domain = extract_domain(url)
+
+            if (domain == 'NA'):
+                email_results.append(get_empty_email_contact(index, school_name, url))
+                continue
+
+            extracted_emails = get_emails(school_name)
+            email_contact = get_email_result(index, school_name, url, extracted_emails)
+            email_results.append(email_contact)
+
+    for res in email_results:
+        print(f'index: {res.index}, name: {res.school_name}, url: {res.school_url}, email_1: {res.email_1}, email_2: {res.email_2}')
 
 finally:
+    print('done')
     driver.quit()
 
