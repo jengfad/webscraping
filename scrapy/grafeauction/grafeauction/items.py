@@ -6,12 +6,16 @@
 from scrapy.item import Item, Field
 from scrapy.loader.processors import TakeFirst, MapCompose
 from w3lib.html import replace_escape_chars
+import grafeauction.constants as constants
 
 def trimmify(value):
     return value.strip()
 
 def percentify(value):
     return value + '%'
+
+def replace_site_prefix(value):
+    return value.replace('/media/cache/resolve', constants.AWS_STORAGE_PREFIX)
 
 class AuctionItem(Item):
     title_name = Field(
@@ -24,8 +28,7 @@ class AuctionItem(Item):
         output_processor=TakeFirst()
     )  
     lot_number = Field(output_processor=TakeFirst()) 
-    sale_order = Field(output_processor=TakeFirst()) 
-    high_bid = Field(output_processor=TakeFirst()) 
+    sale_order = Field(output_processor=TakeFirst())
     quantity = Field(output_processor=TakeFirst()) 
     event_info = Field(output_processor=TakeFirst()) 
     online_premium = Field(
@@ -35,7 +38,8 @@ class AuctionItem(Item):
     sales_tax = Field(
         input_processor=MapCompose(percentify),
         output_processor=TakeFirst()
-    )  
-    event_begins_ending = Field(output_processor=TakeFirst()) 
-    image_urls = Field() 
+    )
+    image_urls = Field(
+        input_processor=MapCompose(replace_site_prefix)
+    ) 
 

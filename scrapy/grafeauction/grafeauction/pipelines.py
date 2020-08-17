@@ -26,4 +26,4 @@ class CustomImageNamePipeline(ImagesPipeline):
             )
 
     def file_path(self, request, response=None, info=None):
-        return 'images/Lot %s/%s.jpg' % (request.meta['lot_folder'], request.meta['index'])
+        return 'output/images/Lot %s/%s.jpg' % (request.meta['lot_folder'], request.meta['index'])

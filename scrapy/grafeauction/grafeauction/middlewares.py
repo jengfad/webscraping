@@ -15,6 +15,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 import scrapy
+import grafeauction.constants as constants
 
 CHROME_DRIVER_PATH = "C://Repos//chromedriver_win32//chromedriver.exe"
 chromeOptions = Options()
@@ -117,7 +118,7 @@ class MainPageDownloaderMiddleWare:
 
     def process_request(self, request, spider):
 
-        if request.url != 'https://www.grafeauction.com/event/pier-1-distribution-center-groveport-day-1':
+        if (request.url not in constants.START_URLS):
             return None
   
         url = request.url
@@ -146,7 +147,7 @@ class LotPageDownloaderMiddleware:
         driver.get(url)
 
         WebDriverWait(driver, 60).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, '.lot-detail__title'))
+            EC.presence_of_element_located((By.CSS_SELECTOR, '.carousel-item img'))
         )
         body = driver.page_source
         driver.quit()
