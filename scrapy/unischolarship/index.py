@@ -157,12 +157,14 @@ def scrape_by_department(department_name):
         csv_reader = csv.reader(in_file, delimiter=',')
         for index, row in enumerate(csv_reader, 1):
 
-            print(f'Get {department_name.upper()} from School #{index}')
 
             if index <= 2:
                 continue
             if index == 23:
                 break
+            
+            index = index - 2
+            print(f'Get {department_name.upper()} from School #{index}')
             
             school_name = row[0]
             url = row[6]
@@ -181,8 +183,8 @@ try:
     start_time = time.time()
     driver = webdriver.Chrome(executable_path=CHROME_DRIVER_PATH, options=chromeOptions)
     for department_name in DEPARTMENT_DICT:
-        # if (department_name != 'scholarship'):
-        #     continue
+        if (department_name != 'history'):
+            continue
         scrape_by_department(department_name)
 
     elapsed_time = time.time() - start_time
