@@ -5,16 +5,15 @@ import grafeauction.constants as constants
 
 class GrafespiderSpider(scrapy.Spider):
     name = 'GrafeSpider'
-    fn = 'https://www.grafeauction.com'
 
     def start_requests(self):
         for url in constants.START_URLS:
             yield scrapy.Request(url, self.parse)
 
     def parse(self, response):
-        for lot_card in response.xpath('//div[contains(@class, "lot-card fillbox")]')[:3]:
+        for lot_card in response.xpath('//div[contains(@class, "lot-card fillbox")]')[:5]:
             url = lot_card.xpath('.//h3[@class = "lot-card__title"]//a/@href').extract_first()
-            formatted_url = self.fn + url
+            formatted_url = constants.SITE_PREFIX + url
 
             auction_item = AuctionItem()
             auction_item_loader = ItemLoader(item=auction_item, selector=lot_card)
