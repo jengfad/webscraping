@@ -15,7 +15,8 @@ import pandas as pd
 
 CHROME_DRIVER_PATH = "C://Repos//chromedriver_win32//chromedriver.exe"
 chromeOptions = Options()
-chromeOptions.add_argument("--kiosk")
+chromeOptions.add_argument("--headless")
+chromeOptions.add_argument('--disable-gpu')
 EMAIL_REGEX = "([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)"
 GOOGLE_URL = "https://www.google.com/"
 
@@ -54,7 +55,7 @@ class EmailsAndLink:
 def extract_email_from_page(url):
     driver.get(url)
 
-    WebDriverWait(driver, 5).until(
+    WebDriverWait(driver, 120).until(
         EC.presence_of_element_located((By.CSS_SELECTOR, 'html'))
     )
     
@@ -70,28 +71,34 @@ def extract_email_from_page(url):
 
     return results
 
-def get_emails(school_name, search_items):  
-    for search_item in search_items:
-        driver.get(GOOGLE_URL)
+def get_emails(school_name, search_items):
 
-        WebDriverWait(driver, 5).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, 'input'))
-        )
+    try:
 
-        search_text = f'{school_name} {search_item}'
-        search_input_el = driver.find_element_by_xpath("//input[@title='Search']")
-        search_input_el.send_keys(search_text)
-        search_input_el.send_keys(Keys.RETURN)
+        for search_item in search_items:
+            driver.get(GOOGLE_URL)
 
-        link = driver.find_element_by_xpath('//div[@class="g"]//a').get_attribute('href')
+            WebDriverWait(driver, 120).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, 'input'))
+            )
 
-        emails = extract_email_from_page(link)
-        if (len(emails) > 0):
-            return EmailsAndLink(emails, link)
-    
-    # fallback
-    # print('no email extracted')
-    return EmailsAndLink([], '')
+            search_text = f'{school_name} {search_item}'
+            search_input_el = driver.find_element_by_xpath("//input[@title='Search']")
+            search_input_el.send_keys(search_text)
+            search_input_el.send_keys(Keys.RETURN)
+
+            link = driver.find_element_by_xpath('//div[@class="g"]//a').get_attribute('href')
+
+            emails = extract_email_from_page(link)
+            if (len(emails) > 0):
+                return EmailsAndLink(emails, link)
+        
+        # fallback
+        # print('no email extracted')
+        return EmailsAndLink([], '')
+
+    except:
+        return EmailsAndLink([], '')
 
 ###########Main Function
 
@@ -152,8 +159,8 @@ def scrape_by_department(department_name):
 
             if index <= 2:
                 continue
-            if index == 23:
-                break
+            # if index == 6:
+            #     break
             
             index = index - 2
             print(f'Get {department_name.upper()} from School #{index}')
@@ -179,7 +186,7 @@ try:
     start_time = time.time()
     driver = webdriver.Chrome(executable_path=CHROME_DRIVER_PATH, options=chromeOptions)
     for department_name in DEPARTMENT_DICT:
-        if (department_name != 'history'):
+        if (department_name != 'scholarship'):
             continue
         scrape_by_department(department_name)
 
