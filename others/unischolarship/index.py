@@ -84,7 +84,8 @@ def get_emails(school_name, search_items):
                 EC.presence_of_element_located((By.CSS_SELECTOR, 'input'))
             )
 
-            search_text = f'{school_name} {search_item}'
+            formatted_school_name = school_name.replace('-', ' ')
+            search_text = f'{formatted_school_name} {search_item}'
             search_input_el = driver.find_element_by_xpath("//input[@title='Search']")
             search_input_el.send_keys(search_text)
             search_input_el.send_keys(Keys.RETURN)
