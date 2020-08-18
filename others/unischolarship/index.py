@@ -115,58 +115,30 @@ def get_email_result(index, school_name, school_url, emails_and_link):
     else:
         return EmailContact(index, school_name, school_url, item.link, item.emails[0], '')
 
-def write_to_csv(filepath, details):
-    output_rows = []
-
-    # build title row
-    title_row = []
-    first_item = details[0]
-    for attr in dir(first_item):
-        if attr[:2] != '__':
-            title_row.append(attr)
-
-    output_rows.append(title_row)
-
-    # build body rows
-    for data in details:
-        item_row = []
-
-        for attr in dir(data):
-            if attr[:2] != '__':
-                item_row.append(getattr(data,attr))
-
-        output_rows.append(item_row)
-
-    draft_path = 'output/draft.csv'
-
-    # write to csv
-    f = open(draft_path, 'w')
-    with f:
-        writer = csv.writer(f)
-        for row in output_rows:
-            writer.writerow(row)
-
-    # clean up csv
-    df = pd.read_csv(draft_path)
-    df.to_csv(filepath, index=False)
-
-
-
-def append_to_csv(data, file_name):
+def append_to_csv(data, file_name, is_header):
+    # Add contents of list as last row in the csv file
+    
     with open(file_name, 'a+', newline='') as write_obj:
         item_row = []
 
         for attr in dir(data):
-            if attr[:2] != '__':
+            if attr[:2] == '__':
+                continue
+
+            if (is_header is False):
                 item_row.append(getattr(data,attr))
+            else:
+                item_row.append(attr)
 
         writer = csv.writer(write_obj)
-        # Add contents of list as last row in the csv file
         writer.writerow(item_row)
 
 
 def scrape_by_department(department_name):
-    email_results = []
+
+    output_file = f'output/{department_name}.csv'
+    append_to_csv(EmailContact('', '', '', '', '', ''), output_file, True)
+
     with open('source_files/Colleges_and_Universities.csv', 'r') as in_file:
         csv_reader = csv.reader(in_file, delimiter=',')
         for index, row in enumerate(csv_reader, 1):
@@ -189,13 +161,8 @@ def scrape_by_department(department_name):
 
             extracted_emails = get_emails(school_name, DEPARTMENT_DICT[department_name])
             email_contact = get_email_result(index, school_name, url, extracted_emails)
-            email_results.append(email_contact)
-            append_to_csv(email_contact, f'output/{department_name}.csv')
+            append_to_csv(email_contact, output_file, False)
 
-    # for res in email_results:
-    #     print(f'index: {res.index}, name: {res.school_name}, url: {res.school_url}, email_1: {res.email_1}, email_2: {res.email_2}')
-
-    # write_to_csv(f'output/{department_name}.csv', email_results)
 
 try:
 
