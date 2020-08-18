@@ -20,6 +20,8 @@ chromeOptions.add_argument('--disable-gpu')
 EMAIL_REGEX = "([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)"
 GOOGLE_URL = "https://www.google.com/"
 
+TWO_MINUTES = 120
+
 DEPARTMENT_DICT = {
     "history": [
         'history department',
@@ -55,7 +57,7 @@ class EmailsAndLink:
 def extract_email_from_page(url):
     driver.get(url)
 
-    WebDriverWait(driver, 120).until(
+    WebDriverWait(driver, TWO_MINUTES).until(
         EC.presence_of_element_located((By.CSS_SELECTOR, 'html'))
     )
     
@@ -78,7 +80,7 @@ def get_emails(school_name, search_items):
         for search_item in search_items:
             driver.get(GOOGLE_URL)
 
-            WebDriverWait(driver, 120).until(
+            WebDriverWait(driver, TWO_MINUTES).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, 'input'))
             )
 
@@ -87,7 +89,11 @@ def get_emails(school_name, search_items):
             search_input_el.send_keys(search_text)
             search_input_el.send_keys(Keys.RETURN)
 
-            link = driver.find_element_by_xpath('//div[@class="g"]//a').get_attribute('href')
+            WebDriverWait(driver, TWO_MINUTES).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, 'div.r a'))
+            )
+
+            link = driver.find_element_by_xpath('//div[@class="r"]//a').get_attribute('href')
 
             emails = extract_email_from_page(link)
             if (len(emails) > 0):
