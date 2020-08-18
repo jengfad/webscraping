@@ -8,7 +8,6 @@ from selenium.webdriver.common.keys import Keys
 
 import time
 import csv
-import tldextract
 from bs4 import BeautifulSoup
 import re
 import pandas as pd
@@ -21,21 +20,23 @@ EMAIL_REGEX = "([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)"
 GOOGLE_URL = "https://www.google.com/"
 
 DEPARTMENT_DICT = {
-    "scholarship": [
-        'scholarship',
-        'career'
-    ],
     "history": [
-        'history department'
-    ],
-    "creative_writing": [
+        'history department',
         'creative writing',
         'arts deparment',
-        'english deparment'
+        'english department'
     ],
     "theater": [
         'theater department',
-        'film department'
+        'theatre department',
+        'film department',
+        'drama and theater arts',
+        'theater and performance',
+        'theater and dance'
+    ],
+    "scholarship": [
+        'scholarship',
+        'career'
     ]
 }
 
@@ -168,6 +169,10 @@ def scrape_by_department(department_name):
             
             school_name = row[0]
             url = row[6]
+
+            if ('.com' in url):
+                print('School domain contains .COM')
+                continue
 
             extracted_emails = get_emails(school_name, DEPARTMENT_DICT[department_name])
             email_contact = get_email_result(index, school_name, url, extracted_emails)
