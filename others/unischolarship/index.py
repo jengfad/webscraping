@@ -28,11 +28,7 @@ DEPARTMENT_DICT = {
     ],
     "theater": [
         'theater department',
-        'theatre department',
-        'film department',
-        'drama and theater arts',
-        'theater and performance',
-        'theater and dance'
+        'film department'
     ],
     "scholarship": [
         'scholarship',
@@ -53,13 +49,6 @@ class EmailsAndLink:
      def __init__(self, emails, link):
         self.emails = emails
         self.link = link
-
-def extract_domain(url):
-    if "http" in str(url) or "www" in str(url):
-        parsed = tldextract.extract(url)
-        parsed = ".".join([i for i in parsed if i])
-        return parsed.replace('www.', '')
-    else: return "NA"
 
 
 def extract_email_from_page(url):
@@ -141,15 +130,17 @@ def write_to_csv(filepath, details):
 
         output_rows.append(item_row)
 
+    draft_path = 'output/draft.csv'
+
     # write to csv
-    f = open('draft.csv', 'w')
+    f = open(draft_path, 'w')
     with f:
         writer = csv.writer(f)
         for row in output_rows:
             writer.writerow(row)
 
     # clean up csv
-    df = pd.read_csv('draft.csv')
+    df = pd.read_csv(draft_path)
     df.to_csv(filepath, index=False)
 
 def scrape_by_department(department_name):
