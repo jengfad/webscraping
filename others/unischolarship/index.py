@@ -146,12 +146,12 @@ def scrape_by_department(department_name):
     output_file = f'output/{department_name}.csv'
     append_to_csv(EmailContact('', '', '', '', '', ''), output_file, True)
 
-    with open('source_files/Colleges_and_Universities.csv', 'r') as in_file:
+    with open('source_files/Colleges_and_Universities.csv', 'r', encoding="utf8") as in_file:
         csv_reader = csv.reader(in_file, delimiter=',')
         for index, row in enumerate(csv_reader, 1):
 
 
-            if index <= 2:
+            if index <= 450:
                 continue
             # if index == 6:
             #     break
@@ -176,8 +176,8 @@ try:
     start_time = time.time()
     driver = webdriver.Chrome(executable_path=CHROME_DRIVER_PATH, options=chromeOptions)
     for department_name in DEPARTMENT_DICT:
-        if (department_name != 'scholarship'):
-            continue
+        # if (department_name != 'scholarship'):
+        #     continue
         scrape_by_department(department_name)
 
     elapsed_time = time.time() - start_time
