@@ -151,7 +151,7 @@ def scrape_by_department(department_name):
         for index, row in enumerate(csv_reader, 1):
 
 
-            if index <= 450:
+            if index <= 2:
                 continue
             # if index == 6:
             #     break
