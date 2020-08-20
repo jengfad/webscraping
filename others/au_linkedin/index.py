@@ -24,14 +24,14 @@ EMAIL_REGEX = "([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)"
 GOOGLE_URL = "https://www.google.com/"
 LINKEDIN_URL = "https://www.linkedin.com/"
 
-TWO_MINUTES = 120
+FIVE_SECONDS = 5
 
 
 def extract_linkedin():
 
     try:
         header_selector = ".//div[@class='ph5 pb5']/div[@class='display-flex mt2']/div[@class='flex-1 mr5']"
-        header = WebDriverWait(driver, TWO_MINUTES).until(
+        header = WebDriverWait(driver, FIVE_SECONDS).until(
             EC.presence_of_element_located((By.XPATH, header_selector))
         )
         # header = driver.find_element(By.XPATH, header_selector)
@@ -67,7 +67,7 @@ def get_profile_data():
 def login_to_linkedin():
     driver.get(LINKEDIN_URL)
 
-    WebDriverWait(driver, TWO_MINUTES).until(
+    WebDriverWait(driver, FIVE_SECONDS).until(
         EC.presence_of_element_located((By.CSS_SELECTOR, 'input'))
     )
 
@@ -81,7 +81,7 @@ def google_search():
 
     driver.get(GOOGLE_URL)
 
-    WebDriverWait(driver, TWO_MINUTES).until(
+    WebDriverWait(driver, FIVE_SECONDS).until(
         EC.presence_of_element_located((By.CSS_SELECTOR, 'input'))
     )
 
@@ -93,7 +93,7 @@ def google_search():
 
     while True:
         try:
-            WebDriverWait(driver, TWO_MINUTES).until(
+            WebDriverWait(driver, FIVE_SECONDS).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, 'div#search'))
             )
             
