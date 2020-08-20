@@ -26,24 +26,52 @@ LINKEDIN_URL = "https://www.linkedin.com/"
 
 FIVE_SECONDS = 5
 
+OUTPUT_PATH = 'output/data.csv'
+
+class PersonDetails:  
+    def __init__(self, full_name, location, position): 
+        self.location = location
+
+        suffix_index = position.index(' at ')
+        self.position = position[:suffix_index]
+        
+        name_parts = full_name.split()
+        self.last_name = name_parts.pop()
+        self.first_name = ' '.join(name_parts)
+
+def append_to_csv(data, file_name, is_header):
+    # Add contents of list as last row in the csv file
+    
+    with open(file_name, 'a+', newline='') as write_obj:
+        item_row = []
+
+        for attr in dir(data):
+            if attr[:2] == '__':
+                continue
+
+            if (is_header is False):
+                item_row.append(getattr(data,attr))
+            else:
+                item_row.append(attr)
+
+        writer = csv.writer(write_obj)
+        writer.writerow(item_row)
 
 def extract_linkedin():
 
     try:
-        header_selector = ".//div[@class='ph5 pb5']/div[@class='display-flex mt2']/div[@class='flex-1 mr5']"
         header = WebDriverWait(driver, FIVE_SECONDS).until(
-            EC.presence_of_element_located((By.XPATH, header_selector))
+            EC.presence_of_element_located((By.XPATH, ".//div[@class='ph5 pb5']/div[@class='display-flex mt2']/div[@class='flex-1 mr5']"))
         )
-        # header = driver.find_element(By.XPATH, header_selector)
-        full_name = header.find_element(By.XPATH, "./ul[1]/li[1]").text #2nd text element
-        position = header.find_element(By.XPATH, "./h2").text #2nd text element
-        location = header.find_element(By.XPATH, "./ul[2]/li[1]").text #2nd text element
+        full_name = header.find_element(By.XPATH, "./ul[1]/li[1]").text
+        position = header.find_element(By.XPATH, "./h2").text
+        location = header.find_element(By.XPATH, "./ul[2]/li[1]").text
 
-        time.sleep(3)
+        time.sleep(2)
 
-        print(full_name)
-        print(position)
-        print(location)
+        details = PersonDetails(full_name, location, position)
+        append_to_csv(details, OUTPUT_PATH, False)
+
     except:
         print('NO DATA FOUND')
 
@@ -117,6 +145,7 @@ try:
 
     login_to_linkedin()
     google_search()
+
 
     elapsed_time = time.time() - start_time
     print(f'TIME ELAPSED: {elapsed_time}')
