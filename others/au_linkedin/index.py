@@ -23,6 +23,8 @@ chromeOptions.add_argument('--kiosk')
 EMAIL_REGEX = "([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)"
 GOOGLE_URL = "https://www.google.com/"
 LINKEDIN_URL = "https://www.linkedin.com/"
+LINKEDIN_USERNAME = '--'
+LINKEDIN_PASSWORD = '--'
 
 FIVE_SECONDS = 5
 
@@ -99,8 +101,8 @@ def login_to_linkedin():
         EC.presence_of_element_located((By.CSS_SELECTOR, 'input'))
     )
 
-    driver.find_element(By.XPATH, '//input[@autocomplete="username"]').send_keys('jlfadriquela02@gmail.com')
-    driver.find_element(By.XPATH, '//input[@autocomplete="current-password"]').send_keys('penny3x???')
+    driver.find_element(By.XPATH, '//input[@autocomplete="username"]').send_keys(LINKEDIN_USERNAME)
+    driver.find_element(By.XPATH, '//input[@autocomplete="current-password"]').send_keys(LINKEDIN_PASSWORD)
     driver.find_element(By.XPATH, '//button[@class="sign-in-form__submit-button"]').click()
 
     time.sleep(1)
@@ -113,18 +115,20 @@ def google_search():
         EC.presence_of_element_located((By.CSS_SELECTOR, 'input'))
     )
 
-    # search_text = 'site:au.linkedin.com AND intitle:rio tinto AND "field services"'
-    search_text = 'site:ph.linkedin.com AND intitle:joane marie llamera'
+    search_text = 'site:au.linkedin.com AND intitle:rio tinto AND "field services"'
+    # search_text = 'site:ph.linkedin.com AND intitle:joane marie llamera'
     search_input_el = driver.find_element_by_xpath("//input[@title='Search']")
     search_input_el.send_keys(search_text)
     search_input_el.send_keys(Keys.RETURN)
 
     while True:
+        page_num = 0
         try:
             WebDriverWait(driver, FIVE_SECONDS).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, 'div#search'))
             )
-            
+            page_num = page_num + 1
+            print (f'On page {page_num}')
             get_profile_data()
 
             next_button = driver.find_element(By.XPATH, "//td[@role='heading']//span[text()='Next']")
