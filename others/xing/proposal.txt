@@ -1,0 +1,24 @@
+AUGUST DATA
+
+Implementation Plan:
+#1 Extract Employee Name, Location and Position from LinkedIn using Python and Selenium
+#2 Using Employee Name from #1, extract email using UI.Vision and Name2Email Chrome Extension
+
+Limitations:
+- LinkedIn does not provide contact info on 'Out Of Network' connections. Thus, I cannot extract the email from it.
+- Email extraction and verification will be on a separate tool/task, it will cause some slow down to the automated process.
+- Used tools will emulate user interactions that will also cause some delays. This is to avoid robot detection by Google and LinkedIn.
+
+ETA:
+Given the above limitations and there are 20 categories per company, my conservative estimate will be 3 companies per day.
+
+Questions:
+- What domain should be used in the email (company: riotinto.com or personal: gmail.com)
+- Are the 5000 names aggregated from multiple companies?
+- How will the rate be computed if there is an excess to 5000 (ex: 7500) or if it is less than 5000 (ex: 3000)
+
+Attached is a video of how I extract/verify the email from the employee name. Note that in the 2nd entry 'Louie L.', the tool didn't find any email results. This is just to show the tool is not retrieving false emails.
+
+Please see attached video demo of LinkedIn/email extraction and Excel file of Employee data.
+
+Thanks!
