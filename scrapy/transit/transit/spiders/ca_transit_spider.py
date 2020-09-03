@@ -18,9 +18,6 @@ class CaTransitSpiderSpider(scrapy.Spider):
 
     def parse_history_page(self, response):
         for index, header in enumerate(response.xpath('//b[contains(text(),"- present")]')):
-            # print(header)
-            # pass
-            # print(index)
             name = header.xpath('.//i/text()').extract_first()
 
             if not name:
@@ -29,11 +26,11 @@ class CaTransitSpiderSpider(scrapy.Spider):
             date = header.xpath('.//i/../text()').extract_first().strip()
 
             if not date:
-                raw = header.xpath('.//text()').extract_first()
+                raw = header.xpath('./text()').extract_first()
                 date = raw.replace(name, '')
 
             transit_item = TransitItem()
             transit_item['name'] = name
-            transit_item['date'] = date.strip()
+            transit_item['date'] = date.strip().replace('(', '').replace(')', '')
 
             yield transit_item
