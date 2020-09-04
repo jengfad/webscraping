@@ -11,3 +11,4 @@ class TransitItem(Item):
     # name = scrapy.Field()
     name = Field()
     date = Field()
+    url = Field()
