@@ -20,7 +20,7 @@ class CaTransitSpiderSpider(scrapy.Spider):
             # if index == 2:
             #     break
 
-            # href = 'edmonton-ab.html'
+            # href = 'vancouver-bc.html'
 
             # if '#' in href:
             #     part_index = href.index('#')
@@ -40,19 +40,23 @@ class CaTransitSpiderSpider(scrapy.Spider):
             yield scrapy.Request(url=url, callback=self.parse_history_page)
 
     def parse_history_page(self, response):
-        for index, header in enumerate(response.xpath('//b//i[1]')):
+        for index, header in enumerate(response.xpath('//b')):
             
-            date = "".join(header.xpath('./../text()').extract()).strip()
+            print(f'header #{index}')
 
-            if 'present' not in date:
+            date = "".join(header.xpath('./text()').getall()).strip()
+
+            if 'PRESENT' not in date.upper():
                 continue
 
-            name = header.xpath('./text()').extract_first()
-
-            if not name:
-                name = header.xpath('.//a/text()').extract_first()
-
-            print(f'transit #{index} - {name} - {date}')
+            link = header.xpath('.//a')
+            
+            if link:
+                name = "".join(link.xpath('.//i/text()').get()).strip()
+            else:
+                name = header.xpath('.//i[1]/text()').get()
+                if not name:
+                    name = name = header.xpath('.//..//i[1]/text()').get()
 
             transit_item = TransitItem()
             transit_item['name'] = name
