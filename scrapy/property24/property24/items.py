@@ -13,3 +13,4 @@ class PropertyItem(Item):
     listingName = Field()
     totalPrice = Field()
     listingAddress = Field()
+    listingUrl = Field()

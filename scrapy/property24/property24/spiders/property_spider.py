@@ -21,7 +21,7 @@ class PropertySpiderSpider(Spider):
     def parse_page_list(self, response):
         for index, href in enumerate(response.xpath('//div[contains(@class, "sc_listingTile")]//div[contains(@class, "sc_listingTileContent")]/a[1]/@href').getall()):
 
-            if index == 2:
+            if index == 6:
                 break
 
             url = self.get_prefixed_url(href)
@@ -29,12 +29,13 @@ class PropertySpiderSpider(Spider):
 
     def parse_property_page(self, response):
         listingName = response.xpath('//div[contains(@class, "sc_listingAddress")]/h1/text()').get()
-        totalPrice = response.xpath('//div[contains(@class, "p24_price")]/text()').get().strip()
+        totalPrice = response.xpath('//div[contains(@class, "p24_price")]/text()').get().replace('₱', '').strip()
         listingAddress = response.xpath('//div[contains(@class, "p24_listingCard p24_listingFeaturesWrapper")]/div[contains(@class, "p24_") and position() = 3]/p/text()').get().strip()
 
         property_item = PropertyItem()
         property_item['listingName'] = listingName
         property_item['totalPrice'] = totalPrice
         property_item['listingAddress'] = listingAddress
+        property_item['listingUrl'] = response.url
 
         yield property_item
