@@ -60,7 +60,7 @@ def get_data():
     list_date = get_nullable_text('//div[contains(@class, "p24_propertyOverviewKey") and contains(text(), "List Date")]/../div/div[contains(@class, "info")]')
     lot_area = get_nullable_text('//div[contains(@class, "p24_propertyOverviewKey") and contains(text(), "Lot Area")]/../div/div[contains(@class, "info")]')
     floor_area = get_nullable_text('//div[contains(@class, "p24_propertyOverviewKey") and contains(text(), "Floor Area")]/../div/div[contains(@class, "info")]')
-
+    # price_per_sqm
 def get_property_page(property_url):
 
     driver.get(property_url)
