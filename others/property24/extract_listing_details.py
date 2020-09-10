@@ -42,11 +42,11 @@ def get_listing_address():
         return "---"
 
 def get_data():
-    listing_name = driver.find_element(By.XPATH, '//div[contains(@class, "sc_listingAddress")]/h1').text
-    total_price = driver.find_element(By.XPATH, '//div[contains(@class, "p24_price")]').text
+    listing_name = get_nullable_text('//div[contains(@class, "sc_listingAddress")]/h1')
+    total_price = get_nullable_text('//div[contains(@class, "p24_price")]')
     listing_address = get_listing_address()
-    listing_title = driver.find_element(By.XPATH, '//div[contains(@class, "p24_listingCard")]/h5').text
-    listing_write_up = driver.find_element(By.XPATH, '//div[contains(@class, "sc_listingDetailsText")]').text
+    listing_title = get_nullable_text('//div[contains(@class, "p24_listingCard")]/h5')
+    listing_write_up = get_nullable_text('//div[contains(@class, "sc_listingDetailsText")]')
 
     bedrooms = get_nullable_text('//div[contains(@class, "p24_keyFeaturesContainer")]//div[contains(@class, "p24_listingFeatures")]//img[contains(@src, "bed")]/../../span[contains(@class, "p24_featureAmount")]')    
     bathrooms = get_nullable_text('//div[contains(@class, "p24_keyFeaturesContainer")]//div[contains(@class, "p24_listingFeatures")]//img[contains(@src, "bath")]/../../span[contains(@class, "p24_featureAmount")]')
@@ -54,7 +54,12 @@ def get_data():
     garden = get_nullable_bool('//div[contains(@class, "p24_keyFeaturesContainer")]//div[contains(@class, "p24_listingFeatures")]//img[contains(@src, "garden")]')
     pet_friendly = get_nullable_bool('//div[contains(@class, "p24_keyFeaturesContainer")]//div[contains(@class, "p24_listingFeatures")]//img[contains(@src, "pet")]')
 
-    print(f'pet friendly {pet_friendly}')
+    listing_number = get_nullable_text('//div[contains(@class, "p24_propertyOverviewKey") and contains(text(), "Listing Number")]/../div/div[contains(@class, "info")]')
+    property_type = get_nullable_text('//div[contains(@class, "p24_propertyOverviewKey") and contains(text(), "Type of Property")]/../div/div[contains(@class, "info")]')
+    street_address = get_nullable_text('//div[contains(@class, "p24_propertyOverviewKey") and contains(text(), "Street Address")]/../div/div[contains(@class, "info")]')
+    list_date = get_nullable_text('//div[contains(@class, "p24_propertyOverviewKey") and contains(text(), "List Date")]/../div/div[contains(@class, "info")]')
+    lot_area = get_nullable_text('//div[contains(@class, "p24_propertyOverviewKey") and contains(text(), "Lot Area")]/../div/div[contains(@class, "info")]')
+    floor_area = get_nullable_text('//div[contains(@class, "p24_propertyOverviewKey") and contains(text(), "Floor Area")]/../div/div[contains(@class, "info")]')
 
 def get_property_page(property_url):
 

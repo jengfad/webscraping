@@ -14,6 +14,7 @@ class Property:
     property_type,
     street_address,
     list_date,
+    lot_area,
     floor_area,
     price_per_sqm,
     broker_name,
@@ -34,6 +35,7 @@ class Property:
         self.property_type=property_type
         self.street_address=street_address
         self.list_date=list_date
+        self.lot_area=lot_area
         self.floor_area=floor_area
         self.price_per_sqm=price_per_sqm
         self.broker_name=broker_name
