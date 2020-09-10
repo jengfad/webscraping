@@ -43,7 +43,7 @@ def append_to_csv(data, file_name, is_header):
         writer.writerow(item_row)
 
 def time_delay():
-    seconds = randint(3, 7)
+    seconds = randint(5, 10)
     time.sleep(seconds)
 
 def get_listings(page_url):
@@ -66,7 +66,17 @@ def get_listings(page_url):
         print('NO DATA FOUND')
 
         
+try:
+    start_time = time.time()
+    for num in range(5):
+        page_num = num + 1
+        print(f'page number {page_num}')
+        page_url = f'{MAIN_URL}&Page={page_num}'
+        get_listings(page_url)
 
-for page_num in range(1):
-    page_url = f'{MAIN_URL}&Page={page_num}'
-    get_listings(page_url)
+    elapsed_time = time.time() - start_time
+    print(f'TIME ELAPSED: {elapsed_time}')
+
+finally:
+    print('done')
+    driver.quit()
