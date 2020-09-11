@@ -43,15 +43,7 @@ def get_listing_address():
     else:
         return "---"
 
-def get_points_of_interest(listing_number):
-    panel = driver.find_elements(By.XPATH, '//div[contains(@data-target, "#accordian-points-of-interest")]')
-
-    if (len(panel) == 0):
-        return
-    
-    panel[0].click()
-    time.sleep(1)
-        
+def click_view_more():
     for category in driver.find_elements(By.XPATH, '//div[contains(@class, "poiCategory sc_listingSummary")]'):
         view_more_button = category.find_elements(By.XPATH, './/a[contains(@class, "js_P24_viewMoreLink")]')
 
@@ -60,9 +52,21 @@ def get_points_of_interest(listing_number):
             time.sleep(1)
             print(f'view more button clicked...')
 
+def get_points_of_interest(listing_number):
+    panel = driver.find_elements(By.XPATH, '//div[contains(@data-target, "#accordian-points-of-interest")]')
+
+    if (len(panel) == 0):
+        return
+    
+    panel[0].click()
+    time.sleep(1)
+
+    click_view_more()
+        
+    for category in driver.find_elements(By.XPATH, '//div[contains(@class, "poiCategory sc_listingSummary")]'):
         category_name = category.find_element(By.XPATH, './/div[contains(@class, "poiCategoryName")]//h3').text
 
-        for item in category.find_elements(By.XPATH, './/div[@class="poiItem"] | //div[contains(class,"poiItem js_p24_viewMoreItem")]'):
+        for item in category.find_elements(By.XPATH, './/div[@class="poiItem"] | .//div[contains(@class,"poiItem js_p24_viewMoreItem")]'):
             item_name = item.find_element(By.XPATH, './/div[@class="poiItemName"]').text
             distance = item.find_element(By.XPATH, './/div[@class="poiItemDistance"]').text
             point_of_interest = Point_Of_Interest(
@@ -118,29 +122,7 @@ def get_data():
 
     get_points_of_interest(listing_number)
 
-def get_property_page(property_url):
-
-    driver.get(property_url)
-    
-    try:
-        WebDriverWait(driver, FIVE_SECONDS).until(
-            EC.presence_of_element_located((By.XPATH, "//div[contains(@class, 'p24_listingCard')]"))
-        )
-        utilities.random_delay()
-        get_data()
-
-    except Exception as e:
-        print(e)
-        print('NO DATA FOUND')
-
-
-try:
-    urls = [
-        'https://www.property24.com.ph/3-bedroom-house-and-lot-for-sale-in-quezon-city-116480188',
-        'https://www.property24.com.ph/lot-for-sale-in-alfonso-cavite-116471156'
-    ]
-    start_time = time.time()
-
+def init_files():
     utilities.init_output_file(Property(
     "",
     "",
@@ -162,6 +144,29 @@ try:
     ""), PROPERTY_DATA_PATH)
     utilities.init_output_file(Point_Of_Interest("", "", "", ""), POINTS_OF_INTEREST_PATH)
 
+def get_property_page(property_url):
+
+    driver.get(property_url)
+    
+    try:
+        WebDriverWait(driver, FIVE_SECONDS).until(
+            EC.presence_of_element_located((By.XPATH, "//div[contains(@class, 'p24_listingCard')]"))
+        )
+        utilities.random_delay()
+        get_data()
+
+    except Exception as e:
+        print(e)
+        print('NO DATA FOUND')
+
+
+try:
+    urls = [
+        'https://www.property24.com.ph/3-bedroom-house-and-lot-for-sale-in-quezon-city-116480188',
+        # 'https://www.property24.com.ph/lot-for-sale-in-alfonso-cavite-116471156'
+    ]
+    start_time = time.time()
+    init_files()
     for url in urls:
         get_property_page(url)
 
