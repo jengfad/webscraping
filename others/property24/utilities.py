@@ -23,6 +23,6 @@ def append_to_csv(data, file_name, is_header):
 def init_output_file(data, file_name):
     append_to_csv(data, file_name, True)
 
-def time_delay():
+def random_delay():
     seconds = randint(5, 10)
     time.sleep(seconds)
