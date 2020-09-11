@@ -5,7 +5,7 @@ import time
 def append_to_csv(data, file_name, is_header):
     # Add contents of list as last row in the csv file
     
-    with open(file_name, 'a+', newline='') as write_obj:
+    with open(file_name, 'a+', newline='', encoding="utf-8") as write_obj:
         item_row = []
 
         for attr in dir(data):

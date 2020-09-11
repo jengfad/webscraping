@@ -9,16 +9,14 @@ class Property:
     bathrooms,
     garages,
     garden,
-    pet_friendly,
+    pets_allowed,
     listing_number,
     property_type,
     street_address,
     list_date,
     floor_area,
-    price_per_sqm,
+    lot_area,
     broker_name,
-    broker_contact_number,
-    broker_email,
     url):
         self.listing_name=listing_name
         self.total_price=total_price
@@ -29,14 +27,23 @@ class Property:
         self.bathrooms=bathrooms
         self.garages=garages
         self.garden=garden
-        self.pet_friendly=pet_friendly
+        self.pets_allowed=pets_allowed
         self.listing_number=listing_number
         self.property_type=property_type
         self.street_address=street_address
         self.list_date=list_date
         self.floor_area=floor_area
-        self.price_per_sqm=price_per_sqm
+        self.lot_area=lot_area
         self.broker_name=broker_name
-        self.broker_contact_number=broker_contact_number
-        self.broker_email=broker_email
         self.url=url
+
+class Point_Of_Interest:
+    def __init__(self,
+    listing_number,
+    category_name,
+    item_name,
+    distance):
+        self.listing_number = listing_number
+        self.category_name = category_name
+        self.item_name = item_name
+        self.distance = distance
