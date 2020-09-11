@@ -6,7 +6,6 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 import time
 import csv
-from bs4 import BeautifulSoup
 from random import randint
 from property import Property, Point_Of_Interest
 import utilities
@@ -45,36 +44,33 @@ def get_listing_address():
         return "---"
 
 def get_points_of_interest(listing_number):
-    panel = driver.find_elements(By.XPATH, '//div[@id="accordian-points-of-interest"]')
+    panel = driver.find_elements(By.XPATH, '//div[contains(@data-target, "#accordian-points-of-interest")]')
 
     if (len(panel) == 0):
         return
     
-    soup = BeautifulSoup(driver.page_source, "lxml")
-
-    print(f'listing num: {listing_number}')
-
-    first = soup.find('div.poiCategoryName h3')
-    print(f'cat {first}')
-
+    panel[0].click()
+    time.sleep(1)
         
-    # for category in driver.find_elements_by_xpath('//div[contains(@class, "poiCategory sc_listingSummary")]'):
-        # test = category.find_element_by_xpath('//div[contains(@class, "CategoryName")]//h3').text
-        
-        # print(f'category name: {test}')
+    for category in driver.find_elements(By.XPATH, '//div[contains(@class, "poiCategory sc_listingSummary")]'):
+        view_more_button = category.find_elements(By.XPATH, './/a[contains(@class, "js_P24_viewMoreLink")]')
 
+        if (len(view_more_button) > 0):
+            view_more_button[0].click()
+            time.sleep(1)
+            print(f'view more button clicked...')
 
-        # for item in category.find_elements_by_xpath('//div[@class="poiItem"]'):
-        #     item_name = item.find_element_by_xpath('//div[@class="poiItemName"]').text
-        #     distance = item.find_element_by_xpath('//div[@class="poiItemDistance"]').text
-        #     point_of_interest = Point_Of_Interest(
-        #         listing_number,
-        #         category_name,
-        #         item_name,
-        #         distance)
-        #     utilities.append_to_csv(point_of_interest, POINTS_OF_INTEREST_PATH, False)
+        category_name = category.find_element(By.XPATH, './/div[contains(@class, "poiCategoryName")]//h3').text
 
-            # print(f'item name {item_name}')
+        for item in category.find_elements(By.XPATH, './/div[@class="poiItem"] | //div[contains(class,"poiItem js_p24_viewMoreItem")]'):
+            item_name = item.find_element(By.XPATH, './/div[@class="poiItemName"]').text
+            distance = item.find_element(By.XPATH, './/div[@class="poiItemDistance"]').text
+            point_of_interest = Point_Of_Interest(
+                listing_number,
+                category_name,
+                item_name,
+                distance)
+            utilities.append_to_csv(point_of_interest, POINTS_OF_INTEREST_PATH, False)
 
 
 def get_data():
@@ -120,6 +116,8 @@ def get_data():
     url)
     utilities.append_to_csv(data, PROPERTY_DATA_PATH, False)
 
+    get_points_of_interest(listing_number)
+
 def get_property_page(property_url):
 
     driver.get(property_url)
@@ -128,7 +126,7 @@ def get_property_page(property_url):
         WebDriverWait(driver, FIVE_SECONDS).until(
             EC.presence_of_element_located((By.XPATH, "//div[contains(@class, 'p24_listingCard')]"))
         )
-        utilities.time_delay()
+        utilities.random_delay()
         get_data()
 
     except Exception as e:
