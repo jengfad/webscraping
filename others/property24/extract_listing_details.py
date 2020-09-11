@@ -79,7 +79,7 @@ def get_points_of_interest(listing_number):
 
 def get_data():
     listing_name = driver.find_element(By.XPATH, '//div[contains(@class, "sc_listingAddress")]/h1').text
-    total_price = driver.find_element(By.XPATH, '//div[contains(@class, "p24_price")]').text
+    total_price = driver.find_element(By.XPATH, '//div[contains(@class, "p24_price")]').text.replace("₱ ", "").replace(",", "")
     listing_address = get_listing_address()
     listing_title = driver.find_element(By.XPATH, '//div[contains(@class, "p24_listingCard")]/h5').text
     listing_write_up = driver.find_element(By.XPATH, '//div[contains(@class, "sc_listingDetailsText")]').text
