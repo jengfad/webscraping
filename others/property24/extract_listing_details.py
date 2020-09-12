@@ -115,8 +115,8 @@ def get_pictures(listing_number):
     urls = []
     ctr = 1
     while True:
-        src = driver.find_element(By.XPATH, '//div[@class="p24_photos"]/img')
-        original_url = src.get_attribute('src')
+        img = driver.find_element(By.XPATH, '//div[@class="p24_photos"]/img')
+        original_url = img.get_attribute('src')
 
         if (original_url in urls):
             break
@@ -125,8 +125,7 @@ def get_pictures(listing_number):
         save_dir = f'C://Repos//property-photos'
         filename = f'{listing_number}-{ctr}.jpg'
         filepath = f'{save_dir}//{filename}'
-        urllib.request.urlretrieve(original_url, filepath)
-
+        img.screenshot(filepath)
         sql_connect.insert_photo_data(listing_number, original_url, filename)
 
         ctr = ctr + 1
@@ -137,7 +136,7 @@ def get_pictures(listing_number):
                 print('no next button...')
                 break
             next_button[0].click()
-            utilities.random_delay(5, 10)
+            utilities.random_delay(5, 7)
         except Exception as e:
             print (e)
             print('Error on next button...')
@@ -196,11 +195,12 @@ def get_property_page(property_url):
         WebDriverWait(driver, FIVE_SECONDS).until(
             EC.presence_of_element_located((By.XPATH, "//div[contains(@class, 'p24_listingCard')]"))
         )
-        utilities.random_delay(3, 7)
+        utilities.random_delay(5, 10)
         get_data()
 
     except TimeoutException as e:
         sql_connect.insert_error_logs(property_url, 'listing not existing anymore')
+        exit()
     except Exception as e:
         error_message = str(e)
         if hasattr(e, 'message'):

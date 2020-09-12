@@ -53,9 +53,20 @@ def get_listings(page_url):
         WebDriverWait(driver, FIVE_SECONDS).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, "div.sc_panelWrapper"))
         )
-        time_delay()
+        time.sleep(1)
+        gap = 500
+        scroll = gap
+        links = []
+        while True:
+            links = driver.find_elements(By.XPATH, '//div[contains(@class, "sc_listingTile")]//a[@class="title"]//div[contains(@style, "198")]//img/../..')
+            if (len(links) == 20 or scroll >= 7000):
+                break
+            driver.execute_script(f"window.scrollTo(0, {scroll});")
+            scroll = scroll + gap
+            print(f'links {len(links)}, gap: {scroll}')
+            time.sleep(1)
 
-        for link in driver.find_elements(By.XPATH, '//div[contains(@class, "sc_listingTile")]//div[contains(@class, "sc_listingTileContent")]/a[1]'):
+        for link in links:
             listing_url = link.get_attribute('href')
             data = Listing(listing_url, page_url)
             append_to_csv(data, OUTPUT_PATH, False)
@@ -67,7 +78,7 @@ def get_listings(page_url):
         
 try:
     start_time = time.time()
-    for num in range(190):
+    for num in range(185):
         page_num = num + 1
         print(f'page number {page_num}')
         page_url = f'{MAIN_URL}&Page={page_num}'
