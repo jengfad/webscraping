@@ -78,7 +78,7 @@ def get_points_of_interest(listing_number):
         for item in category.find_elements(By.XPATH, './/div[@class="poiItem"] | .//div[contains(@class,"poiItem js_p24_viewMoreItem")]'):
             item_name = item.find_element(By.XPATH, './/div[@class="poiItemName"]').text
             distance_km = item.find_element(By.XPATH, './/div[@class="poiItemDistance"]').text
-            distance_km = float(distance_km.replace("km", ""))
+            distance_km = float(distance_km.replace("km", "").strip())
             sql_connect.insert_interest_points(
                 listing_number,
                 category_name,
@@ -90,7 +90,7 @@ def get_price(selector):
     if not text:
         return 0
     
-    return float(text.replace("₱ ", "").replace(",", ""))
+    return float(text.replace("₱ ", "").replace(",", "").strip())
 
 def get_int(selector):
     text = get_nullable_text(selector)
@@ -133,11 +133,15 @@ def get_pictures(listing_number):
 
         ctr = ctr + 1
 
-        next_button = driver.find_elements(By.XPATH, '//a[contains(@class, "js_lightboxNext p24_next")]')
-        if (len(next_button) == 0):
-            break
-        next_button[0].click()
-        utilities.random_delay(3, 5)
+        try:
+            next_button = driver.find_elements(By.XPATH, '//a[contains(@class, "js_lightboxNext p24_next") and not(contains(@style, "none"))]')
+            if (len(next_button) == 0):
+                print('no next button...')
+                break
+            next_button[0].click()
+            utilities.random_delay(3, 5)
+        except Exception as e:
+            print('Error on next button...')
 
 def get_data():
     listing_name = get_nullable_text('//div[contains(@class, "sc_listingAddress")]/h1')
@@ -226,11 +230,11 @@ try:
     start_time = time.time()
     init_files()
     for index, url in enumerate(LISTING_URLS):
-
-        if (index == 5):
+        index = index + 1
+        if (index == 6):
             break
 
-        print(f'Listing #{index + 1} of {len(LISTING_URLS)}')
+        print(f'Listing #{index} of {len(LISTING_URLS)}')
         get_property_page(url)
 
     elapsed_time = time.time() - start_time
