@@ -10,7 +10,6 @@ from random import randint
 from property import Property, Point_Of_Interest, Property_Error
 import utilities
 import sql_connect
-import urllib.request
 from constants import LISTING_URLS
 import random
 
