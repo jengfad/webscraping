@@ -122,7 +122,7 @@ def get_pictures(listing_number):
         
         urls.append(original_url)
         save_dir = f'C://Repos//property-photos'
-        filename = f'{listing_number}-{ctr}.jpg'
+        filename = f'{listing_number}-{ctr}.png'
         filepath = f'{save_dir}//{filename}'
         img.screenshot(filepath)
         sql_connect.insert_photo_data(listing_number, original_url, filename)
