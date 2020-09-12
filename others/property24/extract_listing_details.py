@@ -10,6 +10,7 @@ from random import randint
 from property import Property, Point_Of_Interest
 import utilities
 import sql_connect
+import urllib.request
 
 CHROME_DRIVER_PATH = "C://Repos//chromedriver_win32//chromedriver.exe"
 chromeOptions = Options()
@@ -57,7 +58,7 @@ def click_view_more():
 
         if (len(view_more_button) > 0):
             view_more_button[0].click()
-            time.sleep(1)
+            random_delay(2, 5)
 
 def get_points_of_interest(listing_number):
     panel = driver.find_elements(By.XPATH, '//div[contains(@data-target, "#accordian-points-of-interest")]')
@@ -66,7 +67,7 @@ def get_points_of_interest(listing_number):
         return
     
     panel[0].click()
-    time.sleep(1)
+    random_delay(2, 5)
 
     click_view_more()
         
@@ -110,9 +111,10 @@ def get_pictures(listing_number):
         return
 
     main_gallery[0].click()
-    time.sleep(2)
+    random_delay(2, 5)
 
     photo_urls = []
+    ctr = 1
     while True:
         src = driver.find_element(By.XPATH, '//div[@class="p24_photos"]/img')
         photo_url = src.get_attribute('src')
@@ -121,15 +123,15 @@ def get_pictures(listing_number):
             break
         
         photo_urls.append(photo_url)
-
-        print(f'photo_url: {photo_url}')
+        filename = f'photos/{listing_number}-{ctr}.jpg'
+        urllib.request.urlretrieve(photo_url, filename)
+        ctr = ctr + 1
 
         next_button = driver.find_elements(By.XPATH, '//a[contains(@class, "js_lightboxNext p24_next")]')
         if (len(next_button) == 0):
             break
         next_button[0].click()
-
-    print(f'total photos: {len(photo_urls)}')
+        random_delay(3, 7)
 
 def get_data():
     listing_name = get_nullable_text('//div[contains(@class, "sc_listingAddress")]/h1')
@@ -206,7 +208,7 @@ def get_property_page(property_url):
         WebDriverWait(driver, FIVE_SECONDS).until(
             EC.presence_of_element_located((By.XPATH, "//div[contains(@class, 'p24_listingCard')]"))
         )
-        utilities.random_delay()
+        utilities.random_delay(5, 10)
         get_data()
 
     except Exception as e:
