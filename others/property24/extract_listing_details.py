@@ -12,6 +12,7 @@ import utilities
 import sql_connect
 import urllib.request
 from constants import LISTING_URLS
+import random
 
 CHROME_DRIVER_PATH = "C://Repos//chromedriver_win32//chromedriver.exe"
 chromeOptions = Options()
@@ -136,7 +137,7 @@ def get_pictures(listing_number):
                 print('no next button...')
                 break
             next_button[0].click()
-            utilities.random_delay(3, 5)
+            time.sleep(2)
         except Exception as e:
             print('Error on next button...')
 
@@ -197,6 +198,8 @@ def get_property_page(property_url):
         utilities.random_delay(5, 10)
         get_data()
 
+    except TimeoutException as e:
+        sql_connect.insert_error_logs(property_url, 'listing not existing anymore')
     except Exception as e:
         error_message = str(e)
         if hasattr(e, 'message'):
@@ -207,14 +210,26 @@ def get_property_page(property_url):
 
 
 try:
+    processed_urls = []
     start_time = time.time()
-    for index, url in enumerate(LISTING_URLS):
-        index = index + 1
-        if (index == 51):
-            break
+
+    index = 1
+    while True:
 
         print(f'Listing #{index} of {len(LISTING_URLS)}')
+        
+        url = ""
+        while True:
+            url = random.choice(LISTING_URLS)
+            if (url not in processed_urls):
+                break
+
         get_property_page(url)
+        processed_urls.append(url)
+        
+        index = index + 1
+        if (index == 3):
+            break
 
     elapsed_time = time.time() - start_time
     print(f'TIME ELAPSED: {elapsed_time}')
