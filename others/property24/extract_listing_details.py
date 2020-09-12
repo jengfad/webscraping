@@ -11,6 +11,7 @@ from property import Property, Point_Of_Interest
 import utilities
 import sql_connect
 import urllib.request
+from constants import LISTING_URLS
 
 CHROME_DRIVER_PATH = "C://Repos//chromedriver_win32//chromedriver.exe"
 chromeOptions = Options()
@@ -222,14 +223,14 @@ def get_property_page(property_url):
 
 
 try:
-    urls = [
-        'https://www.property24.com.ph/3-bedroom-house-and-lot-for-sale-in-quezon-city-116480188',
-        # 'https://www.property24.com.ph/lot-for-sale-in-alfonso-cavite-116471156'
-    ]
     start_time = time.time()
     init_files()
-    for index, url in enumerate(urls):
-        print(f'Listing #{index + 1} of {len(urls)}')
+    for index, url in enumerate(LISTING_URLS):
+
+        if (index == 5):
+            break
+
+        print(f'Listing #{index + 1} of {len(LISTING_URLS)}')
         get_property_page(url)
 
     elapsed_time = time.time() - start_time
