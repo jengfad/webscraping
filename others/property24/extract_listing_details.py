@@ -58,7 +58,7 @@ def click_view_more():
 
         if (len(view_more_button) > 0):
             view_more_button[0].click()
-            random_delay(2, 5)
+            utilities.random_delay(2, 5)
 
 def get_points_of_interest(listing_number):
     panel = driver.find_elements(By.XPATH, '//div[contains(@data-target, "#accordian-points-of-interest")]')
@@ -67,7 +67,7 @@ def get_points_of_interest(listing_number):
         return
     
     panel[0].click()
-    random_delay(2, 5)
+    utilities.random_delay(2, 5)
 
     click_view_more()
         
@@ -111,7 +111,7 @@ def get_pictures(listing_number):
         return
 
     main_gallery[0].click()
-    random_delay(2, 5)
+    utilities.random_delay(2, 5)
 
     photo_urls = []
     ctr = 1
@@ -131,7 +131,7 @@ def get_pictures(listing_number):
         if (len(next_button) == 0):
             break
         next_button[0].click()
-        random_delay(3, 7)
+        utilities.random_delay(3, 7)
 
 def get_data():
     listing_name = get_nullable_text('//div[contains(@class, "sc_listingAddress")]/h1')
