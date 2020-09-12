@@ -137,7 +137,7 @@ def get_pictures(listing_number):
                 print('no next button...')
                 break
             next_button[0].click()
-            time.sleep(2)
+            random_delay(5, 10)
         except Exception as e:
             print('Error on next button...')
 
@@ -210,24 +210,32 @@ def get_property_page(property_url):
 
 
 try:
-    processed_urls = []
+    
     start_time = time.time()
 
-    index = 1
-    while True:
+    # processed_urls = []
+    # index = 1
+    # while True:
 
-        print(f'Listing #{index} of {len(LISTING_URLS)}')
+    #     print(f'Listing #{index} of {len(LISTING_URLS)}')
         
-        url = ""
-        while True:
-            url = random.choice(LISTING_URLS)
-            if (url not in processed_urls):
-                break
+    #     url = ""
+    #     while True:
+    #         url = random.choice(LISTING_URLS)
+    #         if (url not in processed_urls):
+    #             break
 
-        get_property_page(url)
-        processed_urls.append(url)
+    #     get_property_page(url)
+    #     processed_urls.append(url)
         
+    #     index = index + 1
+    #     if (index == 51 or index >= len(LISTING_URLS)):
+    #         break
+
+    for index, url in enumerate(LISTING_URLS):
         index = index + 1
+        print(f'Listing #{index} of {len(LISTING_URLS)}')
+        get_property_page(url)
         if (index == 51 or index >= len(LISTING_URLS)):
             break
 
