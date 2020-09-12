@@ -56,7 +56,7 @@ def click_view_more():
 
         if (len(view_more_button) > 0):
             view_more_button[0].click()
-            utilities.random_delay(2, 5)
+            time.sleep(1)
 
 def get_points_of_interest(listing_number):
     panel = driver.find_elements(By.XPATH, '//div[contains(@data-target, "#accordian-points-of-interest")]')
@@ -65,7 +65,7 @@ def get_points_of_interest(listing_number):
         return
     
     panel[0].click()
-    utilities.random_delay(2, 5)
+    time.sleep(1)
 
     click_view_more()
         
@@ -109,7 +109,7 @@ def get_pictures(listing_number):
         return
 
     main_gallery[0].click()
-    utilities.random_delay(2, 5)
+    time.sleep(2)
 
     urls = []
     ctr = 1
@@ -209,7 +209,7 @@ try:
     start_time = time.time()
     for index, url in enumerate(LISTING_URLS):
         index = index + 1
-        if (index == 6):
+        if (index == 51):
             break
 
         print(f'Listing #{index} of {len(LISTING_URLS)}')

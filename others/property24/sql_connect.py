@@ -39,3 +39,15 @@ def insert_photo_data(listing_number, original_url, filename):
     mycursor.execute(sql, val)
 
     mydb.commit()
+
+    
+def insert_error_logs(notes, error_message):
+    mycursor = mydb.cursor()
+
+    sql = ("INSERT INTO error_logs "
+                "(notes, error_message) "
+                "VALUES (%s, %s)")
+    val = (notes, error_message)
+    mycursor.execute(sql, val)
+
+    mydb.commit()
