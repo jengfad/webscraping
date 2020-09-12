@@ -9,6 +9,7 @@ import csv
 from random import randint
 from property import Property, Point_Of_Interest
 import utilities
+import sql_connect
 
 CHROME_DRIVER_PATH = "C://Repos//chromedriver_win32//chromedriver.exe"
 chromeOptions = Options()
@@ -74,14 +75,13 @@ def get_points_of_interest(listing_number):
 
         for item in category.find_elements(By.XPATH, './/div[@class="poiItem"] | .//div[contains(@class,"poiItem js_p24_viewMoreItem")]'):
             item_name = item.find_element(By.XPATH, './/div[@class="poiItemName"]').text
-            distance = item.find_element(By.XPATH, './/div[@class="poiItemDistance"]').text
-            distance = float(distance.replace("km", ""))
-            point_of_interest = Point_Of_Interest(
+            distance_km = item.find_element(By.XPATH, './/div[@class="poiItemDistance"]').text
+            distance_km = float(distance_km.replace("km", ""))
+            sql_connect.insert_interest_points(
                 listing_number,
                 category_name,
                 item_name,
-                distance)
-            utilities.append_to_csv(point_of_interest, POINTS_OF_INTEREST_PATH, False)
+                distance_km)
 
 def get_price(selector):
     text = get_nullable_text(selector)
@@ -121,12 +121,12 @@ def get_data():
     property_type = get_nullable_text('//div[contains(@class, "p24_propertyOverviewKey") and text() = "Type of Property"]/..//div[contains(@class, "p24_info")]')
     street_address = get_nullable_text('//div[contains(@class, "p24_propertyOverviewKey") and text() = "Street Address"]/..//div[contains(@class, "p24_info")]')
     list_date = get_nullable_text('//div[contains(@class, "p24_propertyOverviewKey") and text() = "List Date"]/..//div[contains(@class, "p24_info")]')
-    floor_area = get_float('//div[contains(@class, "p24_propertyOverviewKey") and text() = "Floor Area"]/..//div[contains(@class, "p24_info")]', "SQM")
-    lot_area = get_float('//div[contains(@class, "p24_propertyOverviewKey") and text() = "Lot Area"]/..//div[contains(@class, "p24_info")]', "SQM")
+    floor_area_sqm = get_float('//div[contains(@class, "p24_propertyOverviewKey") and text() = "Floor Area"]/..//div[contains(@class, "p24_info")]', "SQM")
+    lot_area_sqm = get_float('//div[contains(@class, "p24_propertyOverviewKey") and text() = "Lot Area"]/..//div[contains(@class, "p24_info")]', "SQM")
     
     broker_name = get_broker_name('//div[contains(@class, "contactBottomWrap")]//div[contains(@class, "agentTitle")]')
 
-    data = Property(
+    sql_connect.insert_property_data(
     listing_name,
     total_price,
     listing_address,
@@ -141,11 +141,10 @@ def get_data():
     property_type,
     street_address,
     list_date,
-    floor_area,
-    lot_area,
+    floor_area_sqm,
+    lot_area_sqm,
     broker_name,
     url)
-    utilities.append_to_csv(data, PROPERTY_DATA_PATH, False)
 
     get_points_of_interest(listing_number)
 
@@ -194,7 +193,8 @@ try:
     ]
     start_time = time.time()
     init_files()
-    for url in urls:
+    for index, url in enumerate(urls):
+        print(f'Listing #{index + 1} of {len(urls)}')
         get_property_page(url)
 
     elapsed_time = time.time() - start_time

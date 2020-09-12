@@ -42,8 +42,8 @@ class Point_Of_Interest:
     listing_number,
     category_name,
     item_name,
-    distance):
+    distance_km):
         self.listing_number = listing_number
         self.category_name = category_name
         self.item_name = item_name
-        self.distance = distance
+        self.distance_km = distance_km
