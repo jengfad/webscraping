@@ -27,7 +27,7 @@ def get_float(selector, to_replace):
     if not text:
         return 0
 
-    return float(text.replace(to_replace, "").strip())
+    return float(text.replace(to_replace, "").replace(" ", "").strip())
 
 def get_nullable_text(selector):
     el = driver.find_elements(By.XPATH, selector)
@@ -75,7 +75,7 @@ def get_points_of_interest(listing_number):
         for item in category.find_elements(By.XPATH, './/div[@class="poiItem"] | .//div[contains(@class,"poiItem js_p24_viewMoreItem")]'):
             item_name = item.find_element(By.XPATH, './/div[@class="poiItemName"]').text
             distance_km = item.find_element(By.XPATH, './/div[@class="poiItemDistance"]').text
-            distance_km = float(distance_km.replace("km", "").strip())
+            distance_km = float(distance_km.replace("km", "").replace(" ", "").strip())
             sql_connect.insert_interest_points(
                 listing_number,
                 category_name,
@@ -203,6 +203,7 @@ def get_property_page(property_url):
             error_message = e.message
 
         sql_connect.insert_error_logs(property_url, error_message)
+        print(error_message)
 
 
 try:
