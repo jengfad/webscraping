@@ -137,8 +137,9 @@ def get_pictures(listing_number):
                 print('no next button...')
                 break
             next_button[0].click()
-            random_delay(5, 10)
+            utilities.random_delay(5, 10)
         except Exception as e:
+            print (e)
             print('Error on next button...')
 
 def get_data():
