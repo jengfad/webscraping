@@ -228,7 +228,7 @@ try:
         processed_urls.append(url)
         
         index = index + 1
-        if (index == 3):
+        if (index == 51 or index >= len(LISTING_URLS)):
             break
 
     elapsed_time = time.time() - start_time
