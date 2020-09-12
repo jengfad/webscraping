@@ -37,6 +37,13 @@ class Property:
         self.broker_name=broker_name
         self.url=url
 
+class Property_Error:
+    def __init__(self,
+    url,
+    error_message):
+        self.url = url
+        self.error_message = error_message
+
 class Point_Of_Interest:
     def __init__(self,
     listing_number,
