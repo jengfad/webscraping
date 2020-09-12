@@ -237,7 +237,7 @@ try:
         index = index + 1
         print(f'Listing #{index} of {len(LISTING_URLS)}')
         get_property_page(url)
-        if (index == 51 or index >= len(LISTING_URLS)):
+        if (index >= len(LISTING_URLS)):
             break
 
     elapsed_time = time.time() - start_time
