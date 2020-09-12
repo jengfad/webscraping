@@ -195,7 +195,7 @@ def get_property_page(property_url):
         WebDriverWait(driver, FIVE_SECONDS).until(
             EC.presence_of_element_located((By.XPATH, "//div[contains(@class, 'p24_listingCard')]"))
         )
-        utilities.random_delay(5, 10)
+        utilities.random_delay(3, 7)
         get_data()
 
     except TimeoutException as e:
