@@ -22,12 +22,19 @@ OUTPUT_PATH = 'output/listing-details.csv'
 POINTS_OF_INTEREST_PATH = 'output/points-of-interest.csv'
 PROPERTY_DATA_PATH = 'output/property-data.csv'
 
+def get_float(selector, to_replace):
+    text = get_nullable_text(selector)
+    if not text:
+        return 0
+
+    return float(text.replace(to_replace, "").strip())
+
 def get_nullable_text(selector):
     el = driver.find_elements(By.XPATH, selector)
     if (len(el) > 0):
         return el[0].text
     else:
-        return "---"
+        return ""
 
 def get_nullable_bool(selector):
     el = driver.find_elements(By.XPATH, selector)
@@ -41,7 +48,7 @@ def get_listing_address():
     elif (len(address_fallback) > 0):
         return address_fallback[0].text
     else:
-        return "---"
+        return ""
 
 def click_view_more():
     for category in driver.find_elements(By.XPATH, '//div[contains(@class, "poiCategory sc_listingSummary")]'):
@@ -50,7 +57,6 @@ def click_view_more():
         if (len(view_more_button) > 0):
             view_more_button[0].click()
             time.sleep(1)
-            print(f'view more button clicked...')
 
 def get_points_of_interest(listing_number):
     panel = driver.find_elements(By.XPATH, '//div[contains(@data-target, "#accordian-points-of-interest")]')
@@ -69,6 +75,7 @@ def get_points_of_interest(listing_number):
         for item in category.find_elements(By.XPATH, './/div[@class="poiItem"] | .//div[contains(@class,"poiItem js_p24_viewMoreItem")]'):
             item_name = item.find_element(By.XPATH, './/div[@class="poiItemName"]').text
             distance = item.find_element(By.XPATH, './/div[@class="poiItemDistance"]').text
+            distance = float(distance.replace("km", ""))
             point_of_interest = Point_Of_Interest(
                 listing_number,
                 category_name,
@@ -76,28 +83,48 @@ def get_points_of_interest(listing_number):
                 distance)
             utilities.append_to_csv(point_of_interest, POINTS_OF_INTEREST_PATH, False)
 
+def get_price(selector):
+    text = get_nullable_text(selector)
+    if not text:
+        return 0
+    
+    return float(text.replace("₱ ", "").replace(",", ""))
+
+def get_int(selector):
+    text = get_nullable_text(selector)
+    if not text:
+        return 0
+
+    return int(text)
+
+def get_broker_name(selector):
+    text = get_nullable_text(selector)
+    if not text:
+        return ""
+    
+    return text.replace("Show Email Address", "").replace("Show Contact Number", "").strip()
 
 def get_data():
-    listing_name = driver.find_element(By.XPATH, '//div[contains(@class, "sc_listingAddress")]/h1').text
-    total_price = driver.find_element(By.XPATH, '//div[contains(@class, "p24_price")]').text.replace("₱ ", "").replace(",", "")
+    listing_name = get_nullable_text('//div[contains(@class, "sc_listingAddress")]/h1')
+    total_price = get_price('//div[contains(@class, "p24_price")]')
     listing_address = get_listing_address()
-    listing_title = driver.find_element(By.XPATH, '//div[contains(@class, "p24_listingCard")]/h5').text
-    listing_write_up = driver.find_element(By.XPATH, '//div[contains(@class, "sc_listingDetailsText")]').text
+    listing_title = get_nullable_text('//div[contains(@class, "p24_listingCard")]/h5')
+    listing_write_up = get_nullable_text('//div[contains(@class, "sc_listingDetailsText")]')
 
-    bedrooms = get_nullable_text('//div[contains(@class, "p24_keyFeaturesContainer")]//div[contains(@class, "p24_listingFeatures")]//img[contains(@src, "bed")]/../../span[contains(@class, "p24_featureAmount")]')    
-    bathrooms = get_nullable_text('//div[contains(@class, "p24_keyFeaturesContainer")]//div[contains(@class, "p24_listingFeatures")]//img[contains(@src, "bath")]/../../span[contains(@class, "p24_featureAmount")]')
-    garages = get_nullable_text('//div[contains(@class, "p24_keyFeaturesContainer")]//div[contains(@class, "p24_listingFeatures")]//img[contains(@src, "garage")]/../../span[contains(@class, "p24_featureAmount")]')
+    bedrooms = get_int('//div[contains(@class, "p24_keyFeaturesContainer")]//div[contains(@class, "p24_listingFeatures")]//img[contains(@src, "bed")]/../../span[contains(@class, "p24_featureAmount")]')    
+    bathrooms = get_int('//div[contains(@class, "p24_keyFeaturesContainer")]//div[contains(@class, "p24_listingFeatures")]//img[contains(@src, "bath")]/../../span[contains(@class, "p24_featureAmount")]')
+    garages = get_int('//div[contains(@class, "p24_keyFeaturesContainer")]//div[contains(@class, "p24_listingFeatures")]//img[contains(@src, "garage")]/../../span[contains(@class, "p24_featureAmount")]')
     garden = get_nullable_bool('//div[contains(@class, "p24_keyFeaturesContainer")]//div[contains(@class, "p24_listingFeatures")]//img[contains(@src, "garden")]')
     pets_allowed = get_nullable_bool('//div[contains(@class, "p24_keyFeaturesContainer")]//div[contains(@class, "p24_listingFeatures")]//img[contains(@src, "pet")]')
 
-    listing_number = get_nullable_text('//div[contains(@class, "p24_propertyOverviewKey") and text() = "Listing Number"]/..//div[contains(@class, "p24_info")]')
+    listing_number = get_int('//div[contains(@class, "p24_propertyOverviewKey") and text() = "Listing Number"]/..//div[contains(@class, "p24_info")]')
     property_type = get_nullable_text('//div[contains(@class, "p24_propertyOverviewKey") and text() = "Type of Property"]/..//div[contains(@class, "p24_info")]')
     street_address = get_nullable_text('//div[contains(@class, "p24_propertyOverviewKey") and text() = "Street Address"]/..//div[contains(@class, "p24_info")]')
     list_date = get_nullable_text('//div[contains(@class, "p24_propertyOverviewKey") and text() = "List Date"]/..//div[contains(@class, "p24_info")]')
-    floor_area = get_nullable_text('//div[contains(@class, "p24_propertyOverviewKey") and text() = "Floor Area"]/..//div[contains(@class, "p24_info")]')
-    lot_area = get_nullable_text('//div[contains(@class, "p24_propertyOverviewKey") and text() = "Lot Area"]/..//div[contains(@class, "p24_info")]')
+    floor_area = get_float('//div[contains(@class, "p24_propertyOverviewKey") and text() = "Floor Area"]/..//div[contains(@class, "p24_info")]', "SQM")
+    lot_area = get_float('//div[contains(@class, "p24_propertyOverviewKey") and text() = "Lot Area"]/..//div[contains(@class, "p24_info")]', "SQM")
     
-    broker_name = "".join(driver.find_element(By.XPATH, '//div[contains(@class, "contactBottomWrap")]//div[contains(@class, "agentTitle")]').text).strip()
+    broker_name = get_broker_name('//div[contains(@class, "contactBottomWrap")]//div[contains(@class, "agentTitle")]')
 
     data = Property(
     listing_name,
