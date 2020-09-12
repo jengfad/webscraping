@@ -32,7 +32,7 @@ def insert_interest_points(listing_number, category_name, item_name, distance_km
 def insert_photo_data(listing_number, original_url, filename):
     mycursor = mydb.cursor()
 
-    sql = ("INSERT INTO interest_points "
+    sql = ("INSERT INTO photos "
                 "(listing_number, original_url, filename) "
                 "VALUES (%s, %s, %s)")
     val = (listing_number, original_url, filename)
