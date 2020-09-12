@@ -113,25 +113,30 @@ def get_pictures(listing_number):
     main_gallery[0].click()
     utilities.random_delay(2, 5)
 
-    photo_urls = []
+    urls = []
     ctr = 1
     while True:
         src = driver.find_element(By.XPATH, '//div[@class="p24_photos"]/img')
-        photo_url = src.get_attribute('src')
+        original_url = src.get_attribute('src')
 
-        if (photo_url in photo_urls):
+        if (original_url in urls):
             break
         
-        photo_urls.append(photo_url)
-        filename = f'photos/{listing_number}-{ctr}.jpg'
-        urllib.request.urlretrieve(photo_url, filename)
+        urls.append(original_url)
+        save_dir = f'C://Repos//property-photos'
+        filename = f'{listing_number}-{ctr}.jpg'
+        filepath = f'{save_dir}//{filename}'
+        urllib.request.urlretrieve(original_url, filepath)
+
+        sql_connect.insert_photo_data(listing_number, original_url, filename)
+
         ctr = ctr + 1
 
         next_button = driver.find_elements(By.XPATH, '//a[contains(@class, "js_lightboxNext p24_next")]')
         if (len(next_button) == 0):
             break
         next_button[0].click()
-        utilities.random_delay(3, 7)
+        utilities.random_delay(3, 5)
 
 def get_data():
     listing_name = get_nullable_text('//div[contains(@class, "sc_listingAddress")]/h1')
