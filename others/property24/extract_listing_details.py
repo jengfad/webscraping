@@ -104,6 +104,33 @@ def get_broker_name(selector):
     
     return text.replace("Show Email Address", "").replace("Show Contact Number", "").strip()
 
+def get_pictures(listing_number):
+    main_gallery = driver.find_elements(By.XPATH, "//div[@id='main-gallery']")
+    if (len(main_gallery) == 0):
+        return
+
+    main_gallery[0].click()
+    time.sleep(2)
+
+    photo_urls = []
+    while True:
+        src = driver.find_element(By.XPATH, '//div[@class="p24_photos"]/img')
+        photo_url = src.get_attribute('src')
+
+        if (photo_url in photo_urls):
+            break
+        
+        photo_urls.append(photo_url)
+
+        print(f'photo_url: {photo_url}')
+
+        next_button = driver.find_elements(By.XPATH, '//a[contains(@class, "js_lightboxNext p24_next")]')
+        if (len(next_button) == 0):
+            break
+        next_button[0].click()
+
+    print(f'total photos: {len(photo_urls)}')
+
 def get_data():
     listing_name = get_nullable_text('//div[contains(@class, "sc_listingAddress")]/h1')
     total_price = get_price('//div[contains(@class, "p24_price")]')
@@ -147,6 +174,7 @@ def get_data():
     url)
 
     get_points_of_interest(listing_number)
+    get_pictures(listing_number)
 
 def init_files():
     utilities.init_output_file(Property(
