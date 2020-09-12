@@ -7,7 +7,7 @@ from selenium.common.exceptions import NoSuchElementException, TimeoutException
 import time
 import csv
 from random import randint
-from property import Property, Point_Of_Interest
+from property import Property, Point_Of_Interest, Property_Error
 import utilities
 import sql_connect
 import urllib.request
@@ -21,10 +21,6 @@ driver = webdriver.Chrome(executable_path=CHROME_DRIVER_PATH, options=chromeOpti
 
 FIVE_SECONDS = 5
 MAIN_URL = 'https://www.property24.com.ph/property-for-sale?ToPrice=1500000'
-OUTPUT_PATH = 'output/listing-details.csv'
-POINTS_OF_INTEREST_PATH = 'output/points-of-interest.csv'
-PROPERTY_DATA_PATH = 'output/property-data.csv'
-ERROR_LOGS_PATH = 'output/error-logs.csv'
 
 def get_float(selector, to_replace):
     text = get_nullable_text(selector)
@@ -189,8 +185,6 @@ def get_data():
     get_points_of_interest(listing_number)
     get_pictures(listing_number)
 
-def init_files():
-    utilities.init_output_file(Property_Error("", ""), ERROR_LOGS_PATH)
 
 def get_property_page(property_url):
 
@@ -204,12 +198,15 @@ def get_property_page(property_url):
         get_data()
 
     except Exception as e:
-        utilities.append_to_csv(Property_Error(property_url, str(e)), ERROR_LOGS_PATH)
+        error_message = str(e)
+        if hasattr(e, 'message'):
+            error_message = e.message
+
+        sql_connect.insert_error_logs(property_url, error_message)
 
 
 try:
     start_time = time.time()
-    init_files()
     for index, url in enumerate(LISTING_URLS):
         index = index + 1
         if (index == 6):
