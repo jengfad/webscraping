@@ -51,3 +51,18 @@ def insert_error_logs(notes, error_message):
     mycursor.execute(sql, val)
 
     mydb.commit()
+
+def find_photo_record(filename):
+    mycursor = mydb.cursor()
+    mycursor.execute(f"SELECT * FROM photos WHERE filename = '{filename}'")
+    return mycursor.fetchone()
+
+def update_photo_blob(file, filename):
+    mycursor = mydb.cursor()
+    sql = """ UPDATE photos
+            SET file_photo = %s
+            WHERE filename = %s """
+    val = (file, filename)
+    mycursor.execute(sql, val)
+
+    mydb.commit()
