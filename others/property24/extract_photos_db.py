@@ -46,6 +46,7 @@ def get_from_url():
             filename = data[3]
             path = f"{PHOTOS_PATH}//{filename}"
             urllib.request.urlretrieve(original_url, path)
+            print(f"Saved image #{index + 1} of {photos_count}")
             time.sleep(3)
         except Exception as e:
             error_message = str(e)
