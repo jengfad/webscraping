@@ -52,7 +52,7 @@ def get_from_url():
             if hasattr(e, 'message'):
                 error_message = e.message
 
-            sql_connect.insert_error_logs(property_url, error_message)
+            sql_connect.insert_error_logs(original_url, error_message)
             print(error_message)
 
 
