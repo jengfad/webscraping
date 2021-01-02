@@ -10,9 +10,9 @@ from random import randint
 from property import Property, Point_Of_Interest, Property_Error
 import utilities
 import sql_connect
-import urllib.request
 from constants import LISTING_URLS
 import random
+import re
 
 CHROME_DRIVER_PATH = "C://Repos//chromedriver_win32//chromedriver.exe"
 chromeOptions = Options()
@@ -23,12 +23,12 @@ driver = webdriver.Chrome(executable_path=CHROME_DRIVER_PATH, options=chromeOpti
 FIVE_SECONDS = 5
 MAIN_URL = 'https://www.property24.com.ph/property-for-sale?ToPrice=1500000'
 
-def get_float(selector, to_replace):
+def get_float(selector):
     text = get_nullable_text(selector)
     if not text:
         return 0
 
-    return float(text.replace(to_replace, "").replace(" ", "").strip())
+    return float(re.sub("[^0-9]", "", text))
 
 def get_nullable_text(selector):
     el = driver.find_elements(By.XPATH, selector)
@@ -76,19 +76,12 @@ def get_points_of_interest(listing_number):
         for item in category.find_elements(By.XPATH, './/div[@class="poiItem"] | .//div[contains(@class,"poiItem js_p24_viewMoreItem")]'):
             item_name = item.find_element(By.XPATH, './/div[@class="poiItemName"]').text
             distance_km = item.find_element(By.XPATH, './/div[@class="poiItemDistance"]').text
-            distance_km = float(distance_km.replace("km", "").replace(" ", "").strip())
+            distance_km = float(re.sub("[^0-9]", "", distance_km))
             sql_connect.insert_interest_points(
                 listing_number,
                 category_name,
                 item_name,
                 distance_km)
-
-def get_price(selector):
-    text = get_nullable_text(selector)
-    if not text:
-        return 0
-    
-    return float(text.replace("₱ ", "").replace(",", "").strip())
 
 def get_int(selector):
     text = get_nullable_text(selector)
@@ -115,18 +108,17 @@ def get_pictures(listing_number):
     urls = []
     ctr = 1
     while True:
-        src = driver.find_element(By.XPATH, '//div[@class="p24_photos"]/img')
-        original_url = src.get_attribute('src')
+        img = driver.find_element(By.XPATH, '//div[@class="p24_photos"]/img')
+        original_url = img.get_attribute('src')
 
         if (original_url in urls):
             break
         
         urls.append(original_url)
         save_dir = f'C://Repos//property-photos'
-        filename = f'{listing_number}-{ctr}.jpg'
+        filename = f'{listing_number}-{ctr}.png'
         filepath = f'{save_dir}//{filename}'
-        urllib.request.urlretrieve(original_url, filepath)
-
+        img.screenshot(filepath)
         sql_connect.insert_photo_data(listing_number, original_url, filename)
 
         ctr = ctr + 1
@@ -137,13 +129,15 @@ def get_pictures(listing_number):
                 print('no next button...')
                 break
             next_button[0].click()
-            random_delay(5, 10)
+            time.sleep(3)
+            # utilities.random_delay(3, 5)
         except Exception as e:
+            print (e)
             print('Error on next button...')
 
 def get_data():
     listing_name = get_nullable_text('//div[contains(@class, "sc_listingAddress")]/h1')
-    total_price = get_price('//div[contains(@class, "p24_price")]')
+    total_price = get_float('//div[contains(@class, "p24_price")]')
     listing_address = get_listing_address()
     listing_title = get_nullable_text('//div[contains(@class, "p24_listingCard")]/h5')
     listing_write_up = get_nullable_text('//div[contains(@class, "sc_listingDetailsText")]')
@@ -158,8 +152,8 @@ def get_data():
     property_type = get_nullable_text('//div[contains(@class, "p24_propertyOverviewKey") and text() = "Type of Property"]/..//div[contains(@class, "p24_info")]')
     street_address = get_nullable_text('//div[contains(@class, "p24_propertyOverviewKey") and text() = "Street Address"]/..//div[contains(@class, "p24_info")]')
     list_date = get_nullable_text('//div[contains(@class, "p24_propertyOverviewKey") and text() = "List Date"]/..//div[contains(@class, "p24_info")]')
-    floor_area_sqm = get_float('//div[contains(@class, "p24_propertyOverviewKey") and text() = "Floor Area"]/..//div[contains(@class, "p24_info")]', "SQM")
-    lot_area_sqm = get_float('//div[contains(@class, "p24_propertyOverviewKey") and text() = "Lot Area"]/..//div[contains(@class, "p24_info")]', "SQM")
+    floor_area_sqm = get_float('//div[contains(@class, "p24_propertyOverviewKey") and text() = "Floor Area"]/..//div[contains(@class, "p24_info")]')
+    lot_area_sqm = get_float('//div[contains(@class, "p24_propertyOverviewKey") and text() = "Lot Area"]/..//div[contains(@class, "p24_info")]')
     
     broker_name = get_broker_name('//div[contains(@class, "contactBottomWrap")]//div[contains(@class, "agentTitle")]')
 
@@ -195,11 +189,12 @@ def get_property_page(property_url):
         WebDriverWait(driver, FIVE_SECONDS).until(
             EC.presence_of_element_located((By.XPATH, "//div[contains(@class, 'p24_listingCard')]"))
         )
-        utilities.random_delay(3, 7)
+        utilities.random_delay(3, 5)
         get_data()
 
     except TimeoutException as e:
         sql_connect.insert_error_logs(property_url, 'listing not existing anymore')
+        # exit()
     except Exception as e:
         error_message = str(e)
         if hasattr(e, 'message'):
@@ -236,7 +231,7 @@ try:
         index = index + 1
         print(f'Listing #{index} of {len(LISTING_URLS)}')
         get_property_page(url)
-        if (index == 51 or index >= len(LISTING_URLS)):
+        if (index >= len(LISTING_URLS)):
             break
 
     elapsed_time = time.time() - start_time
