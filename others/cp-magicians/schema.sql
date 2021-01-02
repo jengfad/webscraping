@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS magicians (
     email TEXT, 
     location TEXT,
     index_letter_url TEXT,
+    website TEXT,
     location_url TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

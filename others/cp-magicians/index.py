@@ -58,7 +58,7 @@ def parse_letter_index_page(index_letter_url):
                 (By.XPATH, "//table[contains(@class, 'MsoNormalTable')]"))
         )
 
-        for link in driver.find_elements(By.XPATH, '//td[contains(@style, "width: 496")]//a[1]')[:2]:
+        for link in driver.find_elements(By.XPATH, '//td[contains(@style, "width: 496")]//a[1]')[:1]:
             url = link.get_attribute('href')
             parse_magician_by_location_page(url, index_letter_url)
 
@@ -97,12 +97,18 @@ def switch_to_latest_tab():
         driver.window_handles[len(driver.window_handles) - 1])
 
 
-def get_email_from_site(div):
+def get_website(div):
+    link = div.find_elements(
+        By.XPATH, ".//tr[1]//td//a[contains(@href, 'http')]")
+    if (len(link) > 0):
+        return link[0].text
+
+    return ''
+
+
+def get_email_from_site(url):
 
     email = ""
-    link = div.find_element(
-        By.XPATH, ".//tr[1]//td//a[contains(@href, 'http')]")
-    url = link.get_attribute('href')
     driver.execute_script("window.open('');")
     switch_to_latest_tab()
 
@@ -146,8 +152,9 @@ def get_name(div):
 
 def parse_tr(index_letter_url):
     location = get_location()
-    for div in driver.find_elements(By.XPATH, "//div[contains(@align, 'center')]//table")[:5]:
+    for div in driver.find_elements(By.XPATH, "//div[contains(@align, 'center')]//table"):
         name = ''
+        site_url = ''
         try:
             name = get_name(div)
             if ('your name' in name.lower() or name == ''):
@@ -158,24 +165,24 @@ def parse_tr(index_letter_url):
             if (existing_record is not None):
                 continue
 
+            site_url = get_website(div)
             email = get_email_from_mailto(div)
 
             if email == '':
                 email = get_email_from_description(div)
 
-            if email == '':
-                email = get_email_from_site(div)
+            if email == '' and site_url != '':
+                email = get_email_from_site(site_url)
 
             if (email != ''):
                 # contact = Contact(name, email, location)
                 sql_connect.insert_magician(
-                    name, email, location, index_letter_url, driver.current_url)
+                    name, email, location, index_letter_url, driver.current_url, site_url)
                 # append_to_csv(contact, OUTPUT_PATH, False)
 
         except Exception as e:
-            print(f'** ERROR for {name} - {driver.current_url}')
-            print(str(e))
-            time.sleep(0)
+            notes = f"{name}, {site_url}, {driver.current_url}, {index_letter_url}"
+            sql_connect.insert_error_logs(notes, str(e))
 
 
 def get_location():
