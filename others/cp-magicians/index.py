@@ -43,7 +43,7 @@ def parse_letter_index_page(url):
                 (By.XPATH, "//table[contains(@class, 'MsoNormalTable')]"))
         )
 
-        for link in driver.find_elements(By.XPATH, '//td[contains(@style, "width: 496")]//a[1]')[:1]:
+        for link in driver.find_elements(By.XPATH, '//td[contains(@style, "width: 496")]//a[1]')[:3]:
             url = link.get_attribute('href')
             parse_magician_by_location_page(url)
 
@@ -76,15 +76,32 @@ def get_email_from_description(div):
         return ""
 
 
+def get_email_from_site(div):
+    try:
+        link = div.find_element(
+            By.XPATH, ".//tr[1]//td//a[contains(@href, 'http')]")
+        url = link.get_attribute('href')
+        return url
+
+    except Exception as e:
+        error_message = str(e)
+        print(error_message)
+        return ""
+
+
 def parse_tr():
     for div in driver.find_elements(By.XPATH, "//div[contains(@align, 'center')]//table"):
         try:
             name_el = div.find_element(By.XPATH, ".//tr[1]//td[1]//a")
             name = name_el.get_attribute('name').replace("_", " ").strip()
+
             email = get_email_from_mailto(div)
 
             if email == '':
                 email = get_email_from_description(div)
+
+            if email == '':
+                email = get_email_from_site(div)
 
             print(f"Name: {name}, Email: {email}")
         except:
