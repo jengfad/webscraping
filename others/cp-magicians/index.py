@@ -8,6 +8,7 @@ import time
 import csv
 import string
 from random import randint
+import re
 
 CHROME_DRIVER_PATH = "C://Repos//chromedriver_win32//chromedriver.exe"
 chromeOptions = Options()
@@ -19,6 +20,7 @@ driver = webdriver.Chrome(
 FIVE_SECONDS = 5
 MAIN_URL = 'https://www.property24.com.ph/property-for-sale?ToPrice=1500000'
 LETTER_URL = 'http://www.magician-directory.com/Magician-<LETTER>.htm'
+EMAIL_REGEX = r'[\w\.-]+@[\w\.-]+'
 
 
 def main():
@@ -50,6 +52,45 @@ def parse_letter_index_page(url):
         print(error_message)
 
 
+def get_email_from_mailto(div):
+    try:
+        email = div.find_element(
+            By.XPATH, ".//tr[1]//td//a[contains(@href, 'mailto')]/font").text
+        return email
+    except:
+        return ""
+
+
+def get_email_from_description(div):
+    try:
+        description = div.find_element(By.XPATH, ".//tr[2]/td/font").text
+        match = re.findall(EMAIL_REGEX, description)
+
+        if (len(match) > 0):
+            return match[0]
+
+        return ""
+    except Exception as e:
+        error_message = str(e)
+        print(error_message)
+        return ""
+
+
+def parse_tr():
+    for div in driver.find_elements(By.XPATH, "//div[contains(@align, 'center')]//table"):
+        try:
+            name_el = div.find_element(By.XPATH, ".//tr[1]//td[1]//a")
+            name = name_el.get_attribute('name').replace("_", " ").strip()
+            email = get_email_from_mailto(div)
+
+            if email == '':
+                email = get_email_from_description(div)
+
+            print(f"Name: {name}, Email: {email}")
+        except:
+            time.sleep(0)
+
+
 def parse_magician_by_location_page(url):
     driver.get(url)
 
@@ -59,15 +100,7 @@ def parse_magician_by_location_page(url):
                 (By.XPATH, "//div[contains(@align, 'center')]"))
         )
 
-        for tr in driver.find_elements(By.XPATH, "//div[contains(@align, 'center')]//tr[1]"):
-            name = tr.find_element(By.XPATH, ".//td[1]/font/a[1]").text
-            print(f"Name: {name}")
-            try:
-                email = tr.find_element(
-                    By.XPATH, ".//td[2]/a[contains(@href, 'mailto')]/font").text
-                print(f"Email found: {email}")
-            except Exception as e:
-                time.sleep(0)
+        parse_tr()
 
     except Exception as e:
         error_message = str(e)
