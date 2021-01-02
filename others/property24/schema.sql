@@ -1,11 +1,20 @@
+SELECT * FROM listings.photos;
+SELECT * FROM listings.properties;
+SELECT * FROM listings.error_logs;
+
+DELETE FROM photos;
+DELETE FROM properties;
+DELETE FROM interest_points;
+DELETE FROM error_logs;
+
 USE LISTINGS;
 
 CREATE TABLE IF NOT EXISTS error_logs (
     id INT AUTO_INCREMENT PRIMARY KEY,
-	notes TEXT, 
-	error_message TEXT,
+    notes TEXT, 
+    error_message TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)
+);
 
 CREATE TABLE IF NOT EXISTS photos (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -13,7 +22,7 @@ CREATE TABLE IF NOT EXISTS photos (
     original_url TEXT, 
     filename TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)
+);
 
 CREATE TABLE IF NOT EXISTS interest_points (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -22,9 +31,9 @@ CREATE TABLE IF NOT EXISTS interest_points (
     item_name TEXT, 
     distance_km FLOAT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)
+);
 
-CREATE TABLE IF NOT EXISTS interest_points (
+CREATE TABLE IF NOT EXISTS properties (
     id INT AUTO_INCREMENT PRIMARY KEY,
     listing_name TEXT,
     total_price DOUBLE,
@@ -45,4 +54,4 @@ CREATE TABLE IF NOT EXISTS interest_points (
     broker_name TEXT,
     url TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)
+);
