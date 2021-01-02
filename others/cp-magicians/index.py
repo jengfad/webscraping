@@ -115,6 +115,7 @@ def get_email_from_site(div):
 
 
 def parse_tr():
+    location = get_location()
     for div in driver.find_elements(By.XPATH, "//div[contains(@align, 'center')]//table"):
         try:
             name_el = div.find_element(By.XPATH, ".//tr[1]//td[1]//a")
@@ -128,9 +129,18 @@ def parse_tr():
             if email == '':
                 email = get_email_from_site(div)
 
-            print(f"Name: {name}, Email: {email}")
+            print(f"Name: {name}, Email: {email}, Location: {location}")
         except:
             time.sleep(0)
+
+
+def get_location():
+    current_url = driver.current_url
+    prefix = '.com/Magicians-'
+    suffix = '.htm#'
+    start_index = current_url.find(prefix)
+    end_index = current_url.find(suffix)
+    return current_url[start_index + len(prefix):end_index]
 
 
 def parse_magician_by_location_page(url):
