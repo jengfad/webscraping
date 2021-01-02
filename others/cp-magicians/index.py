@@ -20,7 +20,8 @@ driver = webdriver.Chrome(
 FIVE_SECONDS = 5
 MAIN_URL = 'https://www.property24.com.ph/property-for-sale?ToPrice=1500000'
 LETTER_URL = 'http://www.magician-directory.com/Magician-<LETTER>.htm'
-EMAIL_REGEX = r'[\w\.-]+@[\w\.-]+'
+# EMAIL_REGEX = r'[\w\.-]+@[\w\.-]+'
+EMAIL_REGEX = "([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)"
 
 
 def main():
@@ -43,13 +44,12 @@ def parse_letter_index_page(url):
                 (By.XPATH, "//table[contains(@class, 'MsoNormalTable')]"))
         )
 
-        for link in driver.find_elements(By.XPATH, '//td[contains(@style, "width: 496")]//a[1]')[:3]:
+        for link in driver.find_elements(By.XPATH, '//td[contains(@style, "width: 496")]//a[1]')[:1]:
             url = link.get_attribute('href')
             parse_magician_by_location_page(url)
 
     except Exception as e:
         error_message = str(e)
-        print(error_message)
 
 
 def get_email_from_mailto(div):
@@ -64,29 +64,54 @@ def get_email_from_mailto(div):
 def get_email_from_description(div):
     try:
         description = div.find_element(By.XPATH, ".//tr[2]/td/font").text
-        match = re.findall(EMAIL_REGEX, description)
-
-        if (len(match) > 0):
-            return match[0]
-
-        return ""
+        return get_email_by_regex(description)
     except Exception as e:
         error_message = str(e)
-        print(error_message)
         return ""
+
+
+def get_email_by_regex(text):
+    match = re.findall(EMAIL_REGEX, text)
+    if (len(match) > 0):
+        return match[0]
+
+    return ""
 
 
 def get_email_from_site(div):
+
+    email = ""
+    link = div.find_element(
+        By.XPATH, ".//tr[1]//td//a[contains(@href, 'http')]")
+    url = link.get_attribute('href')
+    driver.execute_script("window.open('');")
+    driver.switch_to.window(
+        driver.window_handles[len(driver.window_handles) - 1])
+
     try:
-        link = div.find_element(
-            By.XPATH, ".//tr[1]//td//a[contains(@href, 'http')]")
-        url = link.get_attribute('href')
-        return url
+        driver.get(url)
+        WebDriverWait(driver, FIVE_SECONDS).until(
+            EC.presence_of_element_located(
+                (By.XPATH, "//body"))
+        )
+
+        mailto = driver.find_elements(
+            By.XPATH, ".//a[contains(@href, 'mailto')]")
+
+        if len(mailto) > 0:
+            email = get_email_by_regex(mailto[0].text)
+        else:
+            email = get_email_by_regex(driver.page_source)
 
     except Exception as e:
         error_message = str(e)
-        print(error_message)
-        return ""
+
+    time.sleep(3)
+    driver.close()
+    driver.switch_to.window(
+        driver.window_handles[len(driver.window_handles) - 1])
+
+    return email
 
 
 def parse_tr():
@@ -121,7 +146,6 @@ def parse_magician_by_location_page(url):
 
     except Exception as e:
         error_message = str(e)
-        print(error_message)
 
 
 try:
