@@ -44,8 +44,8 @@ def random_delay(min, max):
     time.sleep(seconds)
 
 
-def parse_letter_index_page(url):
-    driver.get(url)
+def parse_letter_index_page(index_letter_url):
+    driver.get(index_letter_url)
 
     try:
         WebDriverWait(driver, FIVE_SECONDS).until(
@@ -55,7 +55,7 @@ def parse_letter_index_page(url):
 
         for link in driver.find_elements(By.XPATH, '//td[contains(@style, "width: 496")]//a[1]')[:1]:
             url = link.get_attribute('href')
-            parse_magician_by_location_page(url)
+            parse_magician_by_location_page(url, index_letter_url)
 
     except Exception as e:
         error_message = str(e)
@@ -123,7 +123,7 @@ def get_email_from_site(div):
     return email
 
 
-def parse_tr():
+def parse_tr(index_letter_url):
     location = get_location()
     for div in driver.find_elements(By.XPATH, "//div[contains(@align, 'center')]//table"):
         try:
@@ -146,7 +146,8 @@ def parse_tr():
 
             if (email != ''):
                 contact = Contact(name, email, location)
-                sql_connect.insert_magician(name, email, location)
+                sql_connect.insert_magician(
+                    name, email, location, index_letter_url)
                 # append_to_csv(contact, OUTPUT_PATH, False)
 
         except Exception as e:
@@ -163,7 +164,7 @@ def get_location():
     return current_url[start_index + len(prefix):end_index]
 
 
-def parse_magician_by_location_page(url):
+def parse_magician_by_location_page(url, index_letter_url):
     driver.get(url)
 
     try:
@@ -172,7 +173,7 @@ def parse_magician_by_location_page(url):
                 (By.XPATH, "//div[contains(@align, 'center')]"))
         )
 
-        parse_tr()
+        parse_tr(index_letter_url)
 
     except Exception as e:
         error_message = str(e)
