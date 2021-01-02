@@ -34,9 +34,14 @@ class Contact:
 
 
 def main():
-    for letter in string.ascii_uppercase[:1]:
-        index_url = LETTER_URL.replace("<LETTER>", letter)
-        parse_letter_index_page(index_url)
+    try:
+        for letter in string.ascii_uppercase[:1]:
+            index_url = LETTER_URL.replace("<LETTER>", letter)
+            parse_letter_index_page(index_url)
+
+    finally:
+        print('done')
+        driver.quit()
 
 
 def random_delay(min, max):
@@ -53,7 +58,7 @@ def parse_letter_index_page(index_letter_url):
                 (By.XPATH, "//table[contains(@class, 'MsoNormalTable')]"))
         )
 
-        for link in driver.find_elements(By.XPATH, '//td[contains(@style, "width: 496")]//a[1]')[:1]:
+        for link in driver.find_elements(By.XPATH, '//td[contains(@style, "width: 496")]//a[1]')[:2]:
             url = link.get_attribute('href')
             parse_magician_by_location_page(url, index_letter_url)
 
@@ -87,6 +92,11 @@ def get_email_by_regex(text):
     return ""
 
 
+def switch_to_latest_tab():
+    driver.switch_to.window(
+        driver.window_handles[len(driver.window_handles) - 1])
+
+
 def get_email_from_site(div):
 
     email = ""
@@ -94,8 +104,7 @@ def get_email_from_site(div):
         By.XPATH, ".//tr[1]//td//a[contains(@href, 'http')]")
     url = link.get_attribute('href')
     driver.execute_script("window.open('');")
-    driver.switch_to.window(
-        driver.window_handles[len(driver.window_handles) - 1])
+    switch_to_latest_tab()
 
     try:
         driver.get(url)
@@ -115,25 +124,38 @@ def get_email_from_site(div):
     except Exception as e:
         error_message = str(e)
 
-    time.sleep(3)
     driver.close()
-    driver.switch_to.window(
-        driver.window_handles[len(driver.window_handles) - 1])
+    switch_to_latest_tab()
 
     return email
 
 
+def get_name(div):
+
+    name_el = div.find_elements(By.XPATH, ".//tr[1]//td[1]//a")
+
+    if (len(name_el) > 0):
+        return name_el[0].text.strip()
+    else:
+        name_el = div.find_elements(By.XPATH, ".//tr[1]//td[1]//font")
+        if (len(name_el) > 0):
+            return name_el[0].text.strip()
+
+    return ''
+
+
 def parse_tr(index_letter_url):
     location = get_location()
-    for div in driver.find_elements(By.XPATH, "//div[contains(@align, 'center')]//table"):
+    for div in driver.find_elements(By.XPATH, "//div[contains(@align, 'center')]//table")[:5]:
+        name = ''
         try:
-            name_el = div.find_element(By.XPATH, ".//tr[1]//td[1]//a")
-            name = name_el.get_attribute('name').replace("_", " ").strip()
+            name = get_name(div)
+            if ('your name' in name.lower() or name == ''):
+                continue
 
             existing_record = sql_connect.find_magician(name, location)
 
             if (existing_record is not None):
-                print('EXISTING!')
                 continue
 
             email = get_email_from_mailto(div)
@@ -145,12 +167,13 @@ def parse_tr(index_letter_url):
                 email = get_email_from_site(div)
 
             if (email != ''):
-                contact = Contact(name, email, location)
+                # contact = Contact(name, email, location)
                 sql_connect.insert_magician(
-                    name, email, location, index_letter_url)
+                    name, email, location, index_letter_url, driver.current_url)
                 # append_to_csv(contact, OUTPUT_PATH, False)
 
         except Exception as e:
+            print(f'** ERROR for {name} - {driver.current_url}')
             print(str(e))
             time.sleep(0)
 
@@ -165,9 +188,12 @@ def get_location():
 
 
 def parse_magician_by_location_page(url, index_letter_url):
-    driver.get(url)
 
     try:
+        driver.execute_script("window.open('');")
+        switch_to_latest_tab()
+
+        driver.get(url)
         WebDriverWait(driver, FIVE_SECONDS).until(
             EC.presence_of_element_located(
                 (By.XPATH, "//div[contains(@align, 'center')]"))
@@ -177,6 +203,9 @@ def parse_magician_by_location_page(url, index_letter_url):
 
     except Exception as e:
         error_message = str(e)
+
+    driver.close()
+    switch_to_latest_tab()
 
 
 def append_to_csv(data, file_name, is_header):
@@ -202,9 +231,4 @@ def init_output_file(data, file_name):
     append_to_csv(data, file_name, True)
 
 
-try:
-    main()
-
-finally:
-    print('done')
-    driver.quit()
+main()

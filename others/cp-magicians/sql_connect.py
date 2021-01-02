@@ -14,13 +14,13 @@ mydb = mysql.connector.connect(
 )
 
 
-def insert_magician(name, email, location, index_letter_url):
+def insert_magician(name, email, location, index_letter_url, location_url):
     mycursor = mydb.cursor()
 
     sql = ("INSERT INTO magicians "
-           "(name, email, location, index_letter_url) "
-           "VALUES (%s, %s, %s, %s)")
-    val = (name, email, location, index_letter_url)
+           "(name, email, location, index_letter_url, location_url) "
+           "VALUES (%s, %s, %s, %s, %s)")
+    val = (name, email, location, index_letter_url, location_url)
     mycursor.execute(sql, val)
 
     mydb.commit()
