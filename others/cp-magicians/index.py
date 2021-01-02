@@ -22,6 +22,14 @@ MAIN_URL = 'https://www.property24.com.ph/property-for-sale?ToPrice=1500000'
 LETTER_URL = 'http://www.magician-directory.com/Magician-<LETTER>.htm'
 # EMAIL_REGEX = r'[\w\.-]+@[\w\.-]+'
 EMAIL_REGEX = "([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)"
+OUTPUT_PATH = 'output/data.csv'
+
+
+class Contact:
+    def __init__(self, name, email, location):
+        self.name = name
+        self.email = email
+        self.location = location
 
 
 def main():
@@ -129,7 +137,10 @@ def parse_tr():
             if email == '':
                 email = get_email_from_site(div)
 
-            print(f"Name: {name}, Email: {email}, Location: {location}")
+            if (email != ''):
+                contact = Contact(name, email, location)
+                append_to_csv(contact, OUTPUT_PATH, False)
+
         except:
             time.sleep(0)
 
@@ -156,6 +167,29 @@ def parse_magician_by_location_page(url):
 
     except Exception as e:
         error_message = str(e)
+
+
+def append_to_csv(data, file_name, is_header):
+    # Add contents of list as last row in the csv file
+
+    with open(file_name, 'a+', newline='', encoding="utf-8") as write_obj:
+        item_row = []
+
+        for attr in dir(data):
+            if attr[:2] == '__':
+                continue
+
+            if (is_header is False):
+                item_row.append(getattr(data, attr))
+            else:
+                item_row.append(attr)
+
+        writer = csv.writer(write_obj)
+        writer.writerow(item_row)
+
+
+def init_output_file(data, file_name):
+    append_to_csv(data, file_name, True)
 
 
 try:
