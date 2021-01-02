@@ -9,6 +9,7 @@ import csv
 import string
 from random import randint
 import re
+import sql_connect
 
 CHROME_DRIVER_PATH = "C://Repos//chromedriver_win32//chromedriver.exe"
 chromeOptions = Options()
@@ -129,6 +130,12 @@ def parse_tr():
             name_el = div.find_element(By.XPATH, ".//tr[1]//td[1]//a")
             name = name_el.get_attribute('name').replace("_", " ").strip()
 
+            existing_record = sql_connect.find_magician(name, location)
+
+            if (existing_record is not None):
+                print('EXISTING!')
+                continue
+
             email = get_email_from_mailto(div)
 
             if email == '':
@@ -139,9 +146,11 @@ def parse_tr():
 
             if (email != ''):
                 contact = Contact(name, email, location)
-                append_to_csv(contact, OUTPUT_PATH, False)
+                sql_connect.insert_magician(name, email, location)
+                # append_to_csv(contact, OUTPUT_PATH, False)
 
-        except:
+        except Exception as e:
+            print(str(e))
             time.sleep(0)
 
 
