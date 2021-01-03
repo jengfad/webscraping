@@ -86,11 +86,7 @@ def get_email_from_description(div):
 
 def get_email_by_regex(text):
     match = re.findall(EMAIL_REGEX, text)
-
     if (len(match) > 0):
-        if match[0] == 'core-js-bundle@3.2.1' and len(match) > 1:
-            return match[1]
-        
         return match[0]
 
     return ""
