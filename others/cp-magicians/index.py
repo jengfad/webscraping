@@ -21,7 +21,8 @@ driver = webdriver.Chrome(
 FIVE_SECONDS = 5
 MAIN_URL = 'https://www.property24.com.ph/property-for-sale?ToPrice=1500000'
 LETTER_URL = 'http://www.magician-directory.com/Magician-<LETTER>.htm'
-EMAIL_REGEX = r'[\w\.-]+@[\w\.-]+'
+# EMAIL_REGEX = r'[\w\.-]+@[\w\.-]+'
+EMAIL_REGEX = "([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)"
 OUTPUT_PATH = 'output/data.csv'
 
 
@@ -100,7 +101,7 @@ def get_website(div):
     link = div.find_elements(
         By.XPATH, ".//tr[1]//td//a[contains(@href, 'http')]")
     if (len(link) > 0):
-        return link[0].text
+        return link[0].get_attribute('href')
 
     return ''
 
@@ -174,14 +175,20 @@ def parse_tr(index_letter_url):
                 email = get_email_from_site(site_url)
 
             if (email != ''):
-                # contact = Contact(name, email, location)
+                email = format_email(email)
                 sql_connect.insert_magician(
                     name, email, location, index_letter_url, driver.current_url, site_url)
-                # append_to_csv(contact, OUTPUT_PATH, False)
 
         except Exception as e:
             notes = f"{name}, {site_url}, {driver.current_url}, {index_letter_url}"
             sql_connect.insert_error_logs(notes, str(e))
+
+
+def format_email(text):
+    if text[-1].isalnum() == False:
+        return text[0:len(text) - 1]
+
+    return text
 
 
 def get_location():
