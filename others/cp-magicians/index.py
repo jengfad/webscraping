@@ -13,7 +13,7 @@ import sql_connect
 
 CHROME_DRIVER_PATH = "C://Repos//chromedriver_win32//chromedriver.exe"
 chromeOptions = Options()
-chromeOptions.add_argument("--kiosk")
+# chromeOptions.add_argument("--kiosk")
 
 driver = webdriver.Chrome(
     executable_path=CHROME_DRIVER_PATH, options=chromeOptions)
@@ -35,7 +35,7 @@ class Contact:
 
 def main():
     try:
-        for letter in string.ascii_uppercase[:1]:
+        for letter in string.ascii_uppercase:
             index_url = LETTER_URL.replace("<LETTER>", letter)
             parse_letter_index_page(index_url)
 
@@ -58,9 +58,15 @@ def parse_letter_index_page(index_letter_url):
                 (By.XPATH, "//table[contains(@class, 'MsoNormalTable')]"))
         )
 
-        for link in driver.find_elements(By.XPATH, '//td[contains(@style, "width: 496")]//a[1]')[:1]:
+        for link in driver.find_elements(By.XPATH, '//td[contains(@style, "width: 496")]//a[1]'):
             url = link.get_attribute('href')
-            parse_magician_by_location_page(url, index_letter_url)
+            location = get_location(url)
+            finished_location = sql_connect.find_finished_location(location)
+
+            if (finished_location is None):
+                parse_magician_by_location_page(url, index_letter_url)
+            else:
+                print(f'*** ALREADY FINISHED LOCATION')
 
     except Exception as e:
         error_message = str(e)
@@ -151,7 +157,7 @@ def get_name(div):
 
 
 def parse_tr(index_letter_url):
-    location = get_location()
+    location = get_location(driver.current_url)
     for div in driver.find_elements(By.XPATH, "//div[contains(@align, 'center')]//table"):
         name = ''
         site_url = ''
@@ -182,7 +188,8 @@ def parse_tr(index_letter_url):
         except Exception as e:
             notes = f"{name}, {site_url}, {driver.current_url}, {index_letter_url}"
             sql_connect.insert_error_logs(notes, str(e))
-
+    print(f'finished location {location}')
+    sql_connect.insert_finished_location(location)
 
 def format_email(text):
     if text[-1].isalnum() == False:
@@ -190,15 +197,12 @@ def format_email(text):
 
     return text
 
-
-def get_location():
-    current_url = driver.current_url
+def get_location(current_url):
     prefix = '.com/Magicians-'
     suffix = '.htm#'
     start_index = current_url.find(prefix)
     end_index = current_url.find(suffix)
     return current_url[start_index + len(prefix):end_index]
-
 
 def parse_magician_by_location_page(url, index_letter_url):
 
@@ -219,29 +223,6 @@ def parse_magician_by_location_page(url, index_letter_url):
 
     driver.close()
     switch_to_latest_tab()
-
-
-def append_to_csv(data, file_name, is_header):
-    # Add contents of list as last row in the csv file
-
-    with open(file_name, 'a+', newline='', encoding="utf-8") as write_obj:
-        item_row = []
-
-        for attr in dir(data):
-            if attr[:2] == '__':
-                continue
-
-            if (is_header is False):
-                item_row.append(getattr(data, attr))
-            else:
-                item_row.append(attr)
-
-        writer = csv.writer(write_obj)
-        writer.writerow(item_row)
-
-
-def init_output_file(data, file_name):
-    append_to_csv(data, file_name, True)
 
 
 main()

@@ -10,6 +10,7 @@ import mysql.connector
 mydb = mysql.connector.connect(
     host="localhost",
     user="root",
+    password="password123",
     database="cp"
 )
 
@@ -37,9 +38,24 @@ def insert_error_logs(notes, error_message):
 
     mydb.commit()
 
+def insert_finished_location(location):
+    mycursor = mydb.cursor()
+    sql = f"INSERT INTO finished_locations (location) VALUES ('{location}')"
+    mycursor.execute(sql)
+    mydb.commit()
+
+def escape_text(text):
+    return text.replace("'", "''")
 
 def find_magician(name, location):
+    name = escape_text(name)
     mycursor = mydb.cursor(buffered=True)
     mycursor.execute(
         f"SELECT * FROM magicians WHERE name = '{name}' AND location = '{location}'")
+    return mycursor.fetchone()
+
+def find_finished_location(location):
+    mycursor = mydb.cursor(buffered=True)
+    mycursor.execute(
+        f"SELECT * FROM finished_locations WHERE location = '{location}'")
     return mycursor.fetchone()
