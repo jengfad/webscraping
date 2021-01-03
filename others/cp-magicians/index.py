@@ -21,8 +21,7 @@ driver = webdriver.Chrome(
 FIVE_SECONDS = 5
 MAIN_URL = 'https://www.property24.com.ph/property-for-sale?ToPrice=1500000'
 LETTER_URL = 'http://www.magician-directory.com/Magician-<LETTER>.htm'
-# EMAIL_REGEX = r'[\w\.-]+@[\w\.-]+'
-EMAIL_REGEX = "([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)"
+EMAIL_REGEX = r'[\w\.-]+@[\w\.-]+'
 OUTPUT_PATH = 'output/data.csv'
 
 
