@@ -10,6 +10,7 @@ import mysql.connector
 mydb = mysql.connector.connect(
     host="localhost",
     user="root",
+    password="password123",
     database="cp"
 )
 
@@ -37,8 +38,11 @@ def insert_error_logs(notes, error_message):
 
     mydb.commit()
 
+def escape_text(text):
+    return text.replace("'", "''")
 
 def find_magician(name, location):
+    name = escape_text(name)
     mycursor = mydb.cursor(buffered=True)
     mycursor.execute(
         f"SELECT * FROM magicians WHERE name = '{name}' AND location = '{location}'")
