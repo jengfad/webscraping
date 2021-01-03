@@ -17,3 +17,9 @@ CREATE TABLE IF NOT EXISTS magicians (
     location_url TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS finished_locations (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    location TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

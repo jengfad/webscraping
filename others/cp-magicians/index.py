@@ -60,7 +60,13 @@ def parse_letter_index_page(index_letter_url):
 
         for link in driver.find_elements(By.XPATH, '//td[contains(@style, "width: 496")]//a[1]'):
             url = link.get_attribute('href')
-            parse_magician_by_location_page(url, index_letter_url)
+            location = get_location(url)
+            finished_location = sql_connect.find_finished_location(location)
+
+            if (finished_location is None):
+                parse_magician_by_location_page(url, index_letter_url)
+            else:
+                print(f'*** ALREADY FINISHED LOCATION')
 
     except Exception as e:
         error_message = str(e)
@@ -151,7 +157,7 @@ def get_name(div):
 
 
 def parse_tr(index_letter_url):
-    location = get_location()
+    location = get_location(driver.current_url)
     for div in driver.find_elements(By.XPATH, "//div[contains(@align, 'center')]//table"):
         name = ''
         site_url = ''
@@ -182,7 +188,8 @@ def parse_tr(index_letter_url):
         except Exception as e:
             notes = f"{name}, {site_url}, {driver.current_url}, {index_letter_url}"
             sql_connect.insert_error_logs(notes, str(e))
-
+    print(f'finished location {location}')
+    sql_connect.insert_finished_location(location)
 
 def format_email(text):
     if text[-1].isalnum() == False:
@@ -190,15 +197,12 @@ def format_email(text):
 
     return text
 
-
-def get_location():
-    current_url = driver.current_url
+def get_location(current_url):
     prefix = '.com/Magicians-'
     suffix = '.htm#'
     start_index = current_url.find(prefix)
     end_index = current_url.find(suffix)
     return current_url[start_index + len(prefix):end_index]
-
 
 def parse_magician_by_location_page(url, index_letter_url):
 
