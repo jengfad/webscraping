@@ -13,7 +13,7 @@ import sql_connect
 
 CHROME_DRIVER_PATH = "C://Repos//chromedriver_win32//chromedriver.exe"
 chromeOptions = Options()
-chromeOptions.add_argument("--kiosk")
+# chromeOptions.add_argument("--kiosk")
 
 driver = webdriver.Chrome(
     executable_path=CHROME_DRIVER_PATH, options=chromeOptions)
@@ -35,7 +35,7 @@ class Contact:
 
 def main():
     try:
-        for letter in string.ascii_uppercase[:1]:
+        for letter in string.ascii_uppercase:
             index_url = LETTER_URL.replace("<LETTER>", letter)
             parse_letter_index_page(index_url)
 
@@ -58,7 +58,7 @@ def parse_letter_index_page(index_letter_url):
                 (By.XPATH, "//table[contains(@class, 'MsoNormalTable')]"))
         )
 
-        for link in driver.find_elements(By.XPATH, '//td[contains(@style, "width: 496")]//a[1]')[:1]:
+        for link in driver.find_elements(By.XPATH, '//td[contains(@style, "width: 496")]//a[1]'):
             url = link.get_attribute('href')
             parse_magician_by_location_page(url, index_letter_url)
 
@@ -86,7 +86,11 @@ def get_email_from_description(div):
 
 def get_email_by_regex(text):
     match = re.findall(EMAIL_REGEX, text)
+
     if (len(match) > 0):
+        if match[0] == 'core-js-bundle@3.2.1' and len(match) > 1:
+            return match[1]
+        
         return match[0]
 
     return ""
