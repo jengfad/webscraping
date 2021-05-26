@@ -19,7 +19,11 @@ chromeOptions = Options()
 chromeOptions.add_argument('--kiosk')
 EMAIL_REGEX = "([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)"
 GOOGLE_URL = "https://www.google.com/"
-SEARCH_TEXT = 'countertop illinois'
+SEARCH_TEXTS = [
+    'countertop illinois',
+    'countertop installation illinois',
+    'countertop fabrication illinois',
+]
 IL_AREA_CODES = [
     '217',
     '224',
@@ -64,6 +68,7 @@ def extract_email_from_page(url):
     for email in soup.find_all(text=re.compile(EMAIL_REGEX)):
         x = re.findall(EMAIL_REGEX, email)
         results.append(x[0])
+        print('Email: ' + x[0])
 
 
 def append_to_csv(data, file_name, is_header):
@@ -104,19 +109,22 @@ def get_data():
         link = current_profile.find_element(
             By.XPATH, ".//a").get_attribute('href')
 
-        print('link is: ')
-        print(link)
+        print('website: ' + link)
+
+        # current_profile.find_element(By.XPATH, ".//h3").click()
+
+        extract_email_from_page(link)
 
         # go back to google page
         driver.execute_script("window.history.go(-1)")
-        time.sleep(1)
+        time.sleep(2)
         index = index + 1
 
         if (index == 5):
             break
 
 
-def google_search():
+def google_search(search_text):
 
     driver.get(GOOGLE_URL)
 
@@ -125,7 +133,7 @@ def google_search():
     )
 
     search_input_el = driver.find_element_by_xpath("//input[@title='Search']")
-    search_input_el.send_keys(SEARCH_TEXT)
+    search_input_el.send_keys(search_text)
     search_input_el.send_keys(Keys.RETURN)
 
     while True:
@@ -161,7 +169,8 @@ try:
         executable_path=CHROME_DRIVER_PATH, options=chromeOptions)
 
     # init_output_file()
-    google_search()
+    for search_text in SEARCH_TEXTS:
+        google_search(search_text)
 
     elapsed_time = time.time() - start_time
     print(f'TIME ELAPSED: {elapsed_time}')
