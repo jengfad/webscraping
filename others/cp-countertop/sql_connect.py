@@ -10,7 +10,7 @@ import mysql.connector
 mydb = mysql.connector.connect(
     host="localhost",
     user="root",
-    password="",
+    password="???",
     database="cp"
 )
 
@@ -49,3 +49,23 @@ def find_data(website):
     mycursor.execute(
         f"SELECT * FROM ct_countertop WHERE website = '{website}'")
     return mycursor.fetchone()
+
+
+def update_data(website, email, location, phone):
+    mycursor = mydb.cursor()
+    sql = """ UPDATE ct_countertop
+            SET email = %s,
+            location = %s,
+            phone = %s
+            WHERE website = %s """
+    val = (email, location, phone, website)
+    mycursor.execute(sql, val)
+
+    mydb.commit()
+
+
+def get_all_data():
+    mycursor = mydb.cursor(buffered=True)
+    mycursor.execute(
+        f"SELECT * FROM ct_countertop WHERE LENGTH(email) = 0")
+    return mycursor.fetchall()
