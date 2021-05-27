@@ -23,10 +23,14 @@ chromeOptions.add_argument('--kiosk')
 EMAIL_REGEX = "([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)"
 GOOGLE_URL = "https://www.google.com/"
 SEARCH_TEXTS = [
-    'countertop illinois',
-    # 'countertop installation illinois',
-    # 'countertop fabrication illinois',
+    # 'countertop illinois',
+    'countertop installation illinois',
+    'countertop fabrication illinois',
 ]
+
+IL_ZIPCODE = '604'
+IL_ABBR = 'IL'
+
 IL_AREA_CODES = [
     '217',
     '224',
@@ -47,7 +51,13 @@ IL_AREA_CODES = [
 EXCLUDE_SITES = [
     'www.facebook.com',
     'www.hgtv.com',
-    'www.homeadvisor.com'
+    'www.homeadvisor.com',
+    'en.wikipedia.org',
+    'www.homedepot.com',
+    'www.linkedin.com',
+    'www.nytimes.com',
+    'www.pinterest.com',
+    'www.yelp.com'
 ]
 
 FIVE_SECONDS = 5
@@ -69,74 +79,66 @@ def random_delay(min, max):
     time.sleep(seconds)
 
 
-def google_search_website(url):
-    driver.get(GOOGLE_URL)
+def extract_email():
+    soup = BeautifulSoup(driver.page_source, "lxml")
 
-    WebDriverWait(driver, FIVE_SECONDS).until(
-        EC.presence_of_element_located((By.CSS_SELECTOR, 'input'))
-    )
+    results = ''
+    for email in soup.find_all(text=re.compile(EMAIL_REGEX)):
+        x = re.findall(EMAIL_REGEX, email)
+        results = results + ', ' + x[0]
 
-    search_text = url + ' Contact'
-    search_input_el = driver.find_element_by_xpath("//input[@title='Search']")
-    search_input_el.send_keys(search_text)
-    search_input_el.send_keys(Keys.RETURN)
-
-    print('contact search: ' + search_text)
-
-    WebDriverWait(driver, TWO_MINUTES).until(
-        EC.presence_of_element_located((By.CSS_SELECTOR, 'div.g a'))
-    )
-
-    link = driver.find_element_by_xpath(
-        "//div[@class='g']//a").get_attribute('href')
-
-    random_delay(1, 3)
-
-    print('contact url ' + link)
-
-    extract_email_from_page(link)
+    return results
 
 
-def extract_email_from_page(url):
+def element_exists_by_xpath(selector):
+    try:
+        driver.find_element(By.XPATH, selector)
+    except NoSuchElementException:
+        return False
+    return True
+
+
+def extract_location():
+
+    for zipcode in range(60001, 63000):
+        selector = f".//*[contains(text(),'{zipcode}')]"
+
+        if element_exists_by_xpath(selector):
+            location = driver.find_element(By.XPATH, selector).text
+            return location
+
+    return ''
+
+
+def extract_phone():
+
+    for code in IL_AREA_CODES:
+        selector = f".//*[contains(text(),'{code}')]"
+
+        if element_exists_by_xpath(selector):
+            phone = driver.find_element(By.XPATH, selector).text
+            print('phone: ' + phone)
+            return phone
+
+    return ""
+
+
+def extract_details_from_page(url):
     driver.get(url)
 
     WebDriverWait(driver, TWO_MINUTES).until(
         EC.presence_of_element_located((By.CSS_SELECTOR, 'html'))
     )
 
-    soup = BeautifulSoup(driver.page_source, "lxml")
+    phone = extract_phone()
+    location = extract_location()
+    email = extract_email()
 
-    results = []
-    for email in soup.find_all(text=re.compile(EMAIL_REGEX)):
-        x = re.findall(EMAIL_REGEX, email)
-        results.append(x[0])
-        print('Email: ' + x[0])
+    print(f'email: {email}')
+    print(f'phone: {phone}')
+    print(f'location: {location}')
 
     random_delay(1, 3)
-
-
-def append_to_csv(data, file_name, is_header):
-    # Add contents of list as last row in the csv file
-
-    with open(file_name, 'a+', newline='') as write_obj:
-        item_row = []
-
-        for attr in dir(data):
-            if attr[:2] == '__':
-                continue
-
-            if (is_header is False):
-                item_row.append(getattr(data, attr))
-            else:
-                item_row.append(attr)
-
-        writer = csv.writer(write_obj)
-        writer.writerow(item_row)
-
-
-def init_output_file():
-    empty_data = ExtractDetails('Url', 'Email', 'Phone', 'Location')
-    append_to_csv(empty_data, OUTPUT_PATH, True)
 
 
 def is_site_valid(url):
@@ -149,6 +151,31 @@ def is_site_valid(url):
         return False
 
     return True
+
+
+def get_contact_website(url):
+    driver.get(GOOGLE_URL)
+
+    WebDriverWait(driver, FIVE_SECONDS).until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, 'input'))
+    )
+
+    url = 'www.maxwellcounters.com'
+
+    search_text = url + ' contact'
+
+    search_input_el = driver.find_element_by_xpath("//input[@title='Search']")
+    search_input_el.send_keys(search_text)
+    search_input_el.send_keys(Keys.RETURN)
+
+    WebDriverWait(driver, TWO_MINUTES).until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, 'div.g a'))
+    )
+
+    link = driver.find_element_by_xpath(
+        '//div[@class="g"]//a').get_attribute('href')
+
+    extract_details_from_page(link)
 
 
 def get_website():
@@ -173,8 +200,8 @@ def get_website():
         random_delay(1, 3)
         index = index + 1
 
-        if (index == 5):
-            break
+        # if (index == 5):
+        #     break
 
 
 def google_search(search_text):
@@ -200,8 +227,8 @@ def google_search(search_text):
 
             get_website()
 
-            if page_num == 2:
-                break
+            # if page_num == 2:
+            #     break
 
             next_button = driver.find_element(
                 By.XPATH, "//td[@role='heading']//span[text()='Next']")
@@ -215,28 +242,20 @@ def google_search(search_text):
             break
 
 
-def get_websites_only():
-    driver = webdriver.Chrome(
-        executable_path=CHROME_DRIVER_PATH, options=chromeOptions)
-
-    # init_output_file()
-    for search_text in SEARCH_TEXTS:
-        google_search(search_text)
-
-
 try:
 
     start_time = time.time()
     driver = webdriver.Chrome(
         executable_path=CHROME_DRIVER_PATH, options=chromeOptions)
 
-    # init_output_file()
-    for search_text in SEARCH_TEXTS:
-        google_search(search_text)
+    # for search_text in SEARCH_TEXTS:
+    #     google_search(search_text)
+
+    get_contact_website('')
 
     elapsed_time = time.time() - start_time
     print(f'TIME ELAPSED: {elapsed_time}')
 
 finally:
     print('done')
-    driver.quit()
+    # driver.quit()
