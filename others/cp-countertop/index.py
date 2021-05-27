@@ -85,7 +85,13 @@ def extract_email():
     results = ''
     for email in soup.find_all(text=re.compile(EMAIL_REGEX)):
         x = re.findall(EMAIL_REGEX, email)
-        results = results + ', ' + x[0]
+        item = x[0].lower()
+        if item not in results:
+            results = results + ', ' + item
+
+    # has email/s
+    if results:
+        return results[2:len(results)]
 
     return results
 
@@ -100,12 +106,16 @@ def element_exists_by_xpath(selector):
 
 def extract_location():
 
-    for zipcode in range(60001, 63000):
-        selector = f".//*[contains(text(),'{zipcode}')]"
+    selectorAbbr = f".//*[contains(text(),'IL 6')]"
+    selectorFull = f".//*[contains(text(),'Illinois')]"
 
-        if element_exists_by_xpath(selector):
-            location = driver.find_element(By.XPATH, selector).text
-            return location
+    if element_exists_by_xpath(selectorAbbr):
+        location = driver.find_element(By.XPATH, selectorAbbr).text
+        return location
+
+    if element_exists_by_xpath(selectorFull):
+        location = driver.find_element(By.XPATH, selectorFull).text
+        return location
 
     return ''
 
@@ -117,14 +127,13 @@ def extract_phone():
 
         if element_exists_by_xpath(selector):
             phone = driver.find_element(By.XPATH, selector).text
-            print('phone: ' + phone)
             return phone
 
     return ""
 
 
-def extract_details_from_page(url):
-    driver.get(url)
+def extract_details_from_page(contact_url, website):
+    driver.get(contact_url)
 
     WebDriverWait(driver, TWO_MINUTES).until(
         EC.presence_of_element_located((By.CSS_SELECTOR, 'html'))
@@ -134,9 +143,7 @@ def extract_details_from_page(url):
     location = extract_location()
     email = extract_email()
 
-    print(f'email: {email}')
-    print(f'phone: {phone}')
-    print(f'location: {location}')
+    sql_connect.update_data(website, email, location, phone)
 
     random_delay(1, 3)
 
@@ -153,16 +160,14 @@ def is_site_valid(url):
     return True
 
 
-def get_contact_website(url):
+def get_contact_website(website):
     driver.get(GOOGLE_URL)
 
     WebDriverWait(driver, FIVE_SECONDS).until(
         EC.presence_of_element_located((By.CSS_SELECTOR, 'input'))
     )
 
-    url = 'www.maxwellcounters.com'
-
-    search_text = url + ' contact'
+    search_text = website + ' contact'
 
     search_input_el = driver.find_element_by_xpath("//input[@title='Search']")
     search_input_el.send_keys(search_text)
@@ -175,7 +180,21 @@ def get_contact_website(url):
     link = driver.find_element_by_xpath(
         '//div[@class="g"]//a').get_attribute('href')
 
-    extract_details_from_page(link)
+    extract_details_from_page(link, website)
+
+
+def test_update():
+    sql_connect.update_data('www.yelp.com', 'test@email.com',
+                            'Illinois', '902-202-1233')
+
+
+def update_website_data():
+    results = sql_connect.get_all_data()
+    count = len(results)
+    for index, data in enumerate(results):
+        website = data[4]
+        get_contact_website(website)
+        print(f'extracted {index} of {count}')
 
 
 def get_website():
@@ -248,14 +267,18 @@ try:
     driver = webdriver.Chrome(
         executable_path=CHROME_DRIVER_PATH, options=chromeOptions)
 
+    # DO NOT RUN STEP 1 AND 2 AT THE SAME TIME
+
+    # STEP1 - Extract website links first
     # for search_text in SEARCH_TEXTS:
     #     google_search(search_text)
 
-    get_contact_website('')
+    # STEP2 - Extract website details
+    update_website_data()
 
     elapsed_time = time.time() - start_time
     print(f'TIME ELAPSED: {elapsed_time}')
 
 finally:
     print('done')
-    # driver.quit()
+    driver.quit()
