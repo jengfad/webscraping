@@ -10,7 +10,7 @@ import mysql.connector
 mydb = mysql.connector.connect(
     host="localhost",
     user="root",
-    password="???",
+    password="password123",
     database="cp"
 )
 
@@ -67,5 +67,5 @@ def update_data(website, email, location, phone):
 def get_all_data():
     mycursor = mydb.cursor(buffered=True)
     mycursor.execute(
-        f"SELECT * FROM ct_countertop WHERE LENGTH(email) = 0")
+        f"SELECT * FROM ct_countertop WHERE LENGTH(email) = 0 and LENGTH(phone) = 0 and LENGTH(location) = 0")
     return mycursor.fetchall()
