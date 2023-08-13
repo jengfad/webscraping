@@ -22,13 +22,12 @@ chromeOptions.add_argument('--kiosk')
 WAITING_TIME = 10
 
 class CompanyDetails:  
-    def __init__(self, company, business_type, website, email, location, state): 
+    def __init__(self, company, business_type, website, email, location): 
         self.company = company
         self.business_type = business_type
         self.website = website
         self.email = email
         self.location = location
-        self.state = state
 
 class BusinessTypeDetails:
     def __init__(self, id, type): 
@@ -79,6 +78,14 @@ def get_company_details(company_link):
         EC.presence_of_element_located((By.CSS_SELECTOR, 'div#profile'))
     )
 
+    business_name_el = driver.find_element(By.XPATH, '//ul[@id="business-contact-details"]/li[contains(text(), "Business Name")]/following-sibling::li[1]')
+    print(business_name_el.text)
+
+    business_site_el = driver.find_element(By.XPATH, '//ul[@id="business-contact-details"]/li[contains(text(), "Official Website")]/following-sibling::li[1]')
+    print(business_site_el.text)
+
+    business_location_el = driver.find_element(By.XPATH, '//ul[@id="business-contact-details"]/li[contains(text(), "Business Location")]/following-sibling::li[1]')
+    print(business_location_el.text)
 
 
 def get_companies_by_type(type_id):
@@ -99,7 +106,7 @@ def get_companies_by_type(type_id):
         links.append(href)
 
     for link in links:
-        driver.get(link)
+        get_company_details(link)
 
 
 
@@ -137,6 +144,3 @@ try:
 finally:
     print('done')
     # driver.quit()
-
-
-    #115.0.5790.171
