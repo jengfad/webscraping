@@ -21,25 +21,19 @@ chromeOptions = Options()
 chromeOptions.add_argument('--kiosk')
 chromeOptions.add_argument('--kiosk')
 EMAIL_REGEX = "([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)"
-GOOGLE_URL = "https://www.google.com/"
-LINKEDIN_URL = "https://www.linkedin.com/"
-LINKEDIN_USERNAME = '--'
-LINKEDIN_PASSWORD = '--'
+GOOGLE_URL = "https://www.bing.com/"
 
-FIVE_SECONDS = 5
+WAITING_TIME = 10
 
 OUTPUT_PATH = 'output/data.csv'
 
 class PersonDetails:  
-    def __init__(self, full_name, location, position): 
-        self.location = location
-
-        suffix_index = position.index(' at ')
-        self.position = position[:suffix_index]
-        
+    def __init__(self, full_name, company, position): 
         name_parts = full_name.split()
         self.last_name = name_parts.pop()
         self.first_name = ' '.join(name_parts)
+        self.company = company
+        self.position = position
 
 def append_to_csv(data, file_name, is_header):
     # Add contents of list as last row in the csv file
@@ -59,102 +53,101 @@ def append_to_csv(data, file_name, is_header):
         writer = csv.writer(write_obj)
         writer.writerow(item_row)
 
-def extract_linkedin():
+def extract_linkedin(company, position):
 
     try:
-        header = WebDriverWait(driver, FIVE_SECONDS).until(
-            EC.presence_of_element_located((By.XPATH, ".//div[@class='ph5 pb5']/div[@class='display-flex mt2']/div[@class='flex-1 mr5']"))
+        WebDriverWait(driver, WAITING_TIME).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, 'h1'))
         )
-        full_name = header.find_element(By.XPATH, "./ul[1]/li[1]").text
-        position = header.find_element(By.XPATH, "./h2").text
-        location = header.find_element(By.XPATH, "./ul[2]/li[1]").text
 
-        time.sleep(2)
+        item = driver.find_element(By.XPATH, "//div//h1")
 
-        details = PersonDetails(full_name, location, position)
+        full_name = item.text
+        print(f"{full_name}, {company}, {position}")
+
+        time.sleep(1)
+
+        details = PersonDetails(full_name, company, position)
         append_to_csv(details, OUTPUT_PATH, False)
 
-    except:
-        print('NO DATA FOUND')
+    except Exception as e: # work on python 3.x
+        print('Error huhu: '+ str(e))
 
-def get_profile_data():
+def get_profile_data(company, position):
 
-    index = 0
-    total = 1
+    profile = driver.find_element(By.XPATH, "//div[@class='b_title']//a[contains(@href,'https://au.linkedin.com/in/')]")
 
-    while index < total:
+    if profile is None:
+        return
 
-        profiles = driver.find_elements(By.XPATH, "//div[@class='g']")
-        total = len(profiles)
+    profile.click()
+    extract_linkedin(company, position)
 
-        current_profile = profiles[index]
-        current_profile.find_element(By.XPATH, ".//h3").click()
-        extract_linkedin()
-        driver.execute_script("window.history.go(-1)") #go back to google page
-        time.sleep(2)
-        index = index + 1
-
-def login_to_linkedin():
-    driver.get(LINKEDIN_URL)
-
-    WebDriverWait(driver, FIVE_SECONDS).until(
-        EC.presence_of_element_located((By.CSS_SELECTOR, 'input'))
-    )
-
-    driver.find_element(By.XPATH, '//input[@autocomplete="username"]').send_keys(LINKEDIN_USERNAME)
-    driver.find_element(By.XPATH, '//input[@autocomplete="current-password"]').send_keys(LINKEDIN_PASSWORD)
-    driver.find_element(By.XPATH, '//button[@class="sign-in-form__submit-button"]').click()
-
-    time.sleep(1)
-
-def google_search():
-
+def google_search(company, position):
     driver.get(GOOGLE_URL)
 
-    WebDriverWait(driver, FIVE_SECONDS).until(
-        EC.presence_of_element_located((By.CSS_SELECTOR, 'input'))
+    WebDriverWait(driver, WAITING_TIME).until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, 'textarea'))
     )
 
-    search_text = 'site:au.linkedin.com AND intitle:rio tinto AND "field services"'
+    search_text = f'linkedin australia {company} {position}'
     # search_text = 'site:ph.linkedin.com AND intitle:joane marie llamera'
-    search_input_el = driver.find_element_by_xpath("//input[@title='Search']")
+    search_input_el = driver.find_element(By.XPATH, "//div[@class='sb_form_ic']//textarea");
     search_input_el.send_keys(search_text)
     search_input_el.send_keys(Keys.RETURN)
+    time.sleep(3)
 
     while True:
         page_num = 0
         try:
-            WebDriverWait(driver, FIVE_SECONDS).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, 'div#search'))
+            WebDriverWait(driver, WAITING_TIME).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, 'div#sb_search'))
             )
             page_num = page_num + 1
-            print (f'On page {page_num}')
-            get_profile_data()
+            get_profile_data(company, position)
 
-            next_button = driver.find_element(By.XPATH, "//td[@role='heading']//span[text()='Next']")
+            # next_button = driver.find_element(By.XPATH, "//td[@role='heading']//span[text()='Next']")
 
-            random_timeout = random.randint(1,5)
-            time.sleep(random_timeout)
-            next_button.click()
-    
+            # random_timeout = random.randint(1,5)
+            # time.sleep(random_timeout)
+            # next_button.click()
+
+            break
+
         except NoSuchElementException:
             break
         except TimeoutException:
             break
 
+def read_gartner_csv():
+    ctr = 0
+    with open('input.csv') as csv_file:
+        csv_reader = csv.reader(csv_file)
+        next(csv_reader)
+        for row in csv_reader:
+            company = row[0]
+            position = row[1]
+
+            if position.lower().find("undisclosed") == -1:
+                google_search(company, position)
+                ctr = ctr + 1
+                print(f"On data #{ctr}")
+            
+        
+            # if ctr == 5:
+            #     break
+
 try:
 
     start_time = time.time()
     driver = webdriver.Chrome(executable_path=CHROME_DRIVER_PATH, options=chromeOptions)
-
-    login_to_linkedin()
-    google_search()
-
+    # google_search()
+    read_gartner_csv()
 
     elapsed_time = time.time() - start_time
     print(f'TIME ELAPSED: {elapsed_time}')
 
 finally:
     print('done')
-    driver.quit()
+    # driver.quit()
 
