@@ -35,7 +35,7 @@ class BusinessTypeDetails:
         self.id = id
         self.type = type
 
-def deleteFile(filename):
+def delete_file(filename):
     try:
         os.remove(filename)
     except OSError:
@@ -77,6 +77,11 @@ def load_all_search_results():
 
         last_height = new_height
 
+def extract_element(selector):
+    if len(driver.find_elements(By.XPATH, selector)) > 0:
+        return driver.find_element(By.XPATH, selector)
+
+    return None
 
 def get_company_details(company_link, business_type):
     driver.get(company_link)
@@ -85,19 +90,26 @@ def get_company_details(company_link, business_type):
         EC.presence_of_element_located((By.CSS_SELECTOR, 'div#profile'))
     )
 
-    business_name_el = driver.find_element(By.XPATH, '//ul[@id="business-contact-details"]/li[contains(text(), "Business Name")]/following-sibling::li[1]')
-    company = business_name_el.text
+    time.sleep(5)
 
-    business_site_el = driver.find_element(By.XPATH, '//ul[@id="business-contact-details"]/li[contains(text(), "Official Website")]/following-sibling::li[1]')
-    website = business_site_el.text
+    company = ''
+    company_el = extract_element('//ul[@id="business-contact-details"]/li[contains(text(), "Business Name")]/following-sibling::li[1]')
+    if (company_el is not None):
+        company = company_el.text
 
-    business_location_el = driver.find_element(By.XPATH, '//ul[@id="business-contact-details"]/li[contains(text(), "Business Location")]/following-sibling::li[1]')
-    location = business_location_el.text
+    website = ''
+    website_el = extract_element('//ul[@id="business-contact-details"]/li[contains(text(), "Official Website")]/following-sibling::li[1]/a')
+    if (website_el is not None):
+        website = website_el.get_attribute('href')
+
+    location = ''
+    location_el = extract_element('//ul[@id="business-contact-details"]/li[contains(text(), "Business Location")]/following-sibling::li[1]')
+    if (location_el is not None):
+        location = location_el.text
 
     linkedin = ''
-    linkedin_selector = '//ul[@id="business-contact-details"]/li[contains(text(), "Social Links")]/following-sibling::li[1]/a[contains(@href, "linkedin")]'
-    if len(driver.find_elements(By.XPATH, linkedin_selector)) > 0:
-        linkedin_el = driver.find_element(By.XPATH, linkedin_selector)
+    linkedin_el = extract_element('//ul[@id="business-contact-details"]/li[contains(text(), "Social Links")]/following-sibling::li[1]/a[contains(@href, "linkedin")]')
+    if (linkedin_el is not None):
         linkedin = linkedin_el.get_attribute('href')
 
     return CompanyDetails(company, business_type, website, '', linkedin, location)
@@ -120,16 +132,11 @@ def get_companies_by_type(type_id, type_name):
         links.append(href)
 
     OUTPUT_PATH = f'output/{type_name}.csv'
-    deleteFile(OUTPUT_PATH)
-
-    print(len(links))
+    delete_file(OUTPUT_PATH)
 
     for link in links:
         company_details = get_company_details(link, type_name)
-        print(company_details)
         append_to_csv(company_details, OUTPUT_PATH, False)
-
-
 
 def get_scroll_height():
     # Get scroll height
@@ -145,7 +152,7 @@ def get_business_types():
         EC.presence_of_element_located((By.CSS_SELECTOR, 'select#sid'))
     )
 
-    deleteFile(OUTPUT_PATH)
+    delete_file(OUTPUT_PATH)
 
     for option in driver.find_elements(By.XPATH, '//select[@id="sid"]/option'):
         id = option.get_attribute('value')
@@ -159,20 +166,23 @@ def get_data_by_business_type():
     csv_data = pd.read_csv(CSV_PATH, header=None, names=['id','type','status'])
 
     for i, row in csv_data.iterrows():
-        typeId = row['id']
-        typeName = row['type']
-        csv_data['status'] = 'done'
+        type_id = int(row['id'])
+        type_name = row['type']
+        status = row['status']
+        
+        if type_id >= 241 and type_id <= 241 and status != 'done':
+            get_companies_by_type(type_id, type_name)
+            row['status'] = 'done'
 
     csv_data.to_csv(CSV_PATH, index=False)
 
 try:
     start_time = time.time()
     driver = webdriver.Chrome(executable_path=CHROME_DRIVER_PATH, options=chromeOptions)
-    # get_business_types()
+    get_business_types()
+    get_data_by_business_type()
 
-    get_companies_by_type(140, 'Air Conditioning')
-
-    # get_data_by_business_type()
+    # get_companies_by_type(241, 'Antiques & Furniture')
 
     elapsed_time = time.time() - start_time
     print(f'TIME ELAPSED: {elapsed_time}')
