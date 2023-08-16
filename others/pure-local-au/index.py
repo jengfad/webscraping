@@ -31,9 +31,11 @@ class CompanyDetails:
         self.location = location
 
 class BusinessTypeDetails:
-    def __init__(self, id, type): 
+    def __init__(self, id, type, status, number_of_companies): 
         self.id = id
         self.type = type
+        self.status = status
+        self.number_of_companies = number_of_companies
 
 def delete_file(filename):
     try:
@@ -134,9 +136,14 @@ def get_companies_by_type(type_id, type_name):
     OUTPUT_PATH = f'output/{type_name}.csv'
     delete_file(OUTPUT_PATH)
 
+    company_details = CompanyDetails('company', 'business_type', 'website', 'email', 'linkedin', 'location')
+    append_to_csv(company_details, OUTPUT_PATH, True)
+
     for link in links:
         company_details = get_company_details(link, type_name)
         append_to_csv(company_details, OUTPUT_PATH, False)
+
+    return len(links)
 
 def get_scroll_height():
     # Get scroll height
@@ -153,17 +160,20 @@ def get_business_types():
     )
 
     delete_file(OUTPUT_PATH)
+    
+    details = BusinessTypeDetails('id', 'type', 'status', 'number_of_companies')
+    append_to_csv(details, OUTPUT_PATH, True)
 
     for option in driver.find_elements(By.XPATH, '//select[@id="sid"]/option'):
         id = option.get_attribute('value')
         type = option.text
 
-        details = BusinessTypeDetails(id, type)
+        details = BusinessTypeDetails(id, type, '', '')
         append_to_csv(details, OUTPUT_PATH, False)
 
 def get_data_by_business_type():
     CSV_PATH = 'output/business_types.csv'
-    csv_data = pd.read_csv(CSV_PATH, header=None, names=['id','type','status'])
+    csv_data = pd.read_csv(CSV_PATH, header=0, names=['id','number_of_companies','status','type'])
 
     for i, row in csv_data.iterrows():
         type_id = int(row['id'])
@@ -171,8 +181,9 @@ def get_data_by_business_type():
         status = row['status']
         
         if type_id >= 241 and type_id <= 241 and status != 'done':
-            get_companies_by_type(type_id, type_name)
-            row['status'] = 'done'
+            number_of_companies = get_companies_by_type(type_id, type_name)
+            csv_data.loc[i, 'status'] = 'done'
+            csv_data.loc[i, 'number_of_companies'] = number_of_companies
 
     csv_data.to_csv(CSV_PATH, index=False)
 
