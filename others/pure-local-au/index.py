@@ -20,6 +20,7 @@ chromeOptions.add_argument('--kiosk')
 chromeOptions.add_argument('--kiosk')
 
 WAITING_TIME = 10
+WAITING_TIME_COMPANY = 1
 
 class CompanyDetails:  
     def __init__(self, company, business_type, website, email, linkedin, location): 
@@ -92,8 +93,6 @@ def get_company_details(company_link, business_type):
         EC.presence_of_element_located((By.CSS_SELECTOR, 'div#profile'))
     )
 
-    time.sleep(5)
-
     company = ''
     company_el = extract_element('//ul[@id="business-contact-details"]/li[contains(text(), "Business Name")]/following-sibling::li[1]')
     if (company_el is not None):
@@ -140,8 +139,12 @@ def get_companies_by_type(type_id, type_name):
     append_to_csv(company_details, OUTPUT_PATH, True)
 
     for link in links:
-        company_details = get_company_details(link, type_name)
-        append_to_csv(company_details, OUTPUT_PATH, False)
+        try:
+            company_details = get_company_details(link, type_name)
+            append_to_csv(company_details, OUTPUT_PATH, False)
+        except:
+            print(f'cannot extract {link}')
+            pass
 
     return len(links)
 
@@ -180,20 +183,37 @@ def get_data_by_business_type():
         type_name = row['type']
         status = row['status']
         
-        if type_id >= 241 and type_id <= 241 and status != 'done':
-            number_of_companies = get_companies_by_type(type_id, type_name)
-            csv_data.loc[i, 'status'] = 'done'
-            csv_data.loc[i, 'number_of_companies'] = number_of_companies
+        # start = 1
+        # end = 10
+        # start = 11
+        # end = 50
+        # start = 51
+        # end = 100
+        # start = 101
+        # end = 200
+        # start = 201
+        # end = 300
+        # start = 301
+        # end = 400
+        start = 401
+        end = 500
+        if type_id >= start and type_id <= end and status != 'done':
+            try:
+                print(f'getting {type_id} - {type_name}')
+                number_of_companies = get_companies_by_type(type_id, type_name)
+                csv_data.loc[i, 'status'] = 'done'
+                csv_data.loc[i, 'number_of_companies'] = number_of_companies
+            except:
+                print(f'cannot extract {type_id} - {type_name}')
+                pass
 
     csv_data.to_csv(CSV_PATH, index=False)
 
 try:
     start_time = time.time()
     driver = webdriver.Chrome(executable_path=CHROME_DRIVER_PATH, options=chromeOptions)
-    get_business_types()
+    # get_business_types() # only run this once
     get_data_by_business_type()
-
-    # get_companies_by_type(241, 'Antiques & Furniture')
 
     elapsed_time = time.time() - start_time
     print(f'TIME ELAPSED: {elapsed_time}')
